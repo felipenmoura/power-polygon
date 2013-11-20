@@ -1,4 +1,3 @@
-
 /* SERVER DEFAULT CONFIGURATION */
 var serverConf= {
     usedefaultuser: true,
@@ -7,6 +6,9 @@ var serverConf= {
     port: 8081,
     serverSecret: 'onlyMeAndGitHubUsersKnowIt! - Please,change this for your use'
 }
+
+var colors= require('cli-color');
+var write= require('./ppw/_node-modules/write.js');
 
 /* DEFINITIONS */
 var express = require('express')
@@ -160,20 +162,17 @@ Services= (function(){
     var _socketsEvents= function (socket) {
 
         socket.on('listening', function (talk) {
-            console.log("someone joined =================== "+talk);
             socket.set('watchingTo', talk);
             socket.join(talk);
+            write.out('info', 'Socket connection')
         });
         socket.on('remote-control-send', function (data) {
-            //socket.broadcast.emit('control-command', data); // IS WORKING!!!
             socket.get('watchingTo', function(err, watchingTo){
                 socket.broadcast
                       .to( watchingTo )
                       .emit('control-command', data);
             });
         });
-
-
     }
 
     var _init= function(){
@@ -241,16 +240,6 @@ Services= (function(){
             if(!_isLogged(req, res)){
                 return false;
             }
-
-            /*switch(req.params.command){
-                case "broadcast":{
-                    postData;
-                    //io.sockets.in(postData.talk).send('control-command', postData);
-                    ('control-command', postData);
-                    break;
-                }
-            }*/
-            //res.end(JSON.stringify(data));
         });
 
         // filtering only authenticated users
@@ -274,20 +263,26 @@ Services= (function(){
         app.get(/^\/_demos\/.*/, function(req, res){
             deliver(req.url, req, res);
         });
+        
+        console.log("+========================================================+");
+        console.log("|                    Power Polygon Web                   |");
+        console.log("+========================================================+");
+        write.out('checkpoint', 'Initializing...');
 
 
         // listeners
-
+        write.out('checkpoint', 'Starting socket interface');
         server= app.listen(serverConf.port);
-        io= require('socket.io').listen(server);
+        io= require('socket.io').listen(server, {log: false});
         io.sockets.on('connection', _socketsEvents);
 
         // just announcing the server initialization...
-        console.log('[PPW] Listening on '+ server.address()? server.address(): '????');
+        write.out('checkpoint', 'HTTP server listening on port '+ colors.yellow((server.address()? server.address().port: '????')));
         if(_token)
-            console.log('[PPW] Your token is ' + _token);
+            write.out('checkpoint', 'Your token is ' + _token);
 
-        console.log();
+        //
+        startWatching();
     };
 
     return {
@@ -302,22 +297,22 @@ Services= (function(){
 var getToken= function(fn, repeat){
 
     if(!repeat)
-        console.log("[PPW] It looks like it is your first time here!\n      Please, define a secret token to identify the ADMIN user:");
+        write.out('checkpoint', "It looks like it is your first time here!\n      Please, define a secret token to identify the ADMIN user:");
 
     rl.question("> ",
                 function(answer){
                     if(answer.length<3){
-                        console.log("[PPW] At least 3 characters, please!");
+                        write.out('error', "At least 3 characters, please!");
                         getToken(fn, true);
                         return;
                     }else{
-                        console.log("[PPW] Your token was set!\n      You will use it to activate locked features.\n");
+                        write.out('checkpoint', "Your token was set!\n      You will use it to activate locked features.\n");
                         _token= answer;
                         if(fn && typeof fn == 'function'){
                             try{
                                 fn(_token);
                             }catch(e){
-                                console.log("[PPW][ERROR] Failed executing the callback for getToken!");
+                                write.out('error', "Failed executing the callback for getToken!");
                             }
                         }
                     }
@@ -362,9 +357,9 @@ var verifyDB= function(){
     }else{
 
         // database exists, let's verify the server config
-        db.each("SELECT confid, usedefaultuser, defaultuser  FROM serverconfig", function(err, row) {
+        db.each("SELECT confid, usedefaultuser, defaultuser FROM serverconfig", function(err, row) {
             if(err){
-                console.log(err)
+                write.out('error', err);
             }else{
                 // if the server config has changed, let's update it.
                 if(serverConf.usedefaultuser != row.usedefaultuser
@@ -407,6 +402,20 @@ var getUser= function(req){
         return req.session.username;
     }
 };
+
+var startWatching= function(){
+    var eye= require("./ppw/_node-modules/watch.js");
+    eye.watch('talks/',
+              {
+                  ignored: /^\./,
+                  persistent: true,
+                  ignoreInitial: true,
+                  usePolling: true
+                  //ignoreInitial: true,
+                  //interval: 1000,
+                  //binaryInterval: 3000
+              });
+}
 
 // initializing everything, starting by calling the verifyDB.
 verifyDB();
