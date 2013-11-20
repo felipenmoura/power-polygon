@@ -1,5 +1,32 @@
 "use strict";
 
+var isTalkIndex= function(path){
+    
+};
+var isTalkDir= function(path){
+    
+};
+
+var isSlide= function(path){
+    
+};
+
+var getTalk= function(path){
+    
+};
+
+var getTalkConf= function(){
+    
+};
+
+var Talk= function(){
+    
+};
+
+var Slide= function(){
+    
+};
+
 (function(){
     
     var write= require('./write.js');

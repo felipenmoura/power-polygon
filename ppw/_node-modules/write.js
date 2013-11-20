@@ -4,21 +4,24 @@ var colors= require('cli-color');
 var write= function(type){
     if(type == 'error'){
         type= 'red'
-        typeLabel= "[PPW]::Error   | ";
+        typeLabel= " [PPW]::Error   | ";
     }else if(type == 'warn' || type == "warning"){
         type= 'yellow'
-        typeLabel= "[PPW]::Warning | ";
+        typeLabel= " [PPW]::Warning | ";
     }else if(type == 'checkpoint' || type == 'green'){
         type= 'green'
-        typeLabel= "[PPW]::OK      | ";
+        typeLabel= " [PPW]::OK      | ";
+    }else if(type == 'step'){
+        type= 'white'
+        typeLabel= "                - ";
     }else{
         type= 'white'
-        typeLabel= "     ::        - ";
+        typeLabel= "      ::        - ";
     }
     
     var ar= Array.prototype.slice.call(arguments, 1);
     ar.unshift(colors[type](typeLabel));
-
+    
     console.log.apply(this, ar);
 };
 

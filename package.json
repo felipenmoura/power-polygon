@@ -14,9 +14,10 @@
   ],
   "dependencies": {
     "express": "*",
-    "socket.io": "0.9.13",
+    "socket.io": "~0.9.13",
     "grunt": "*",
     "grunt-contrib-uglify": "*",
+    "phantomjs": "~1.9.2",
     "sqlite3": "*",
     "chokidar": "~0.7.1",
     "cli-color": "~0.2.3"
