@@ -1,11 +1,21 @@
 "use strict";
 
 var fs = require('fs');
+
+global.phantomjs= require('phantomjs');
+
+// https://github.com/gruntjs/grunt-lib-phantomjs
+
+//var page = require('webpage').create();
+/*global.phantomjs.create(function(ph) {
+    console.log('created');
+});*/
+
 //var phantom = require('phantomjs');
 //var page = require('webpage').create();
-var phantomjsWrapper = require('phantomjs-wrapper');
+//var phantomjsWrapper = require('phantomjs-wrapper');
 
-phantomjsWrapper({timeout: 60000}, function(err, phantomjs) {
+//phantomjsWrapper({timeout: 60000}, function(err, phantomjs) {
   //phantomjs.createPage(function(err, page) {
     //page.open('http://www.google.com', function(err) {
       /*page.on('alert', function(msg) {
@@ -29,7 +39,7 @@ phantomjsWrapper({timeout: 60000}, function(err, phantomjs) {
       });*/
     //});
   //});
-});
+//});
 
 
 

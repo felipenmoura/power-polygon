@@ -29,11 +29,12 @@ var express = require('express')
 /* MIDLEWARES */
 app.use(express.compress());
 app.use(express.cookieParser());
-app.use(express.bodyParser({
+app.use(express.json({
     keepExtensions: true,
     uploadDir: '/ppw/tmp/',
     expires: new Date(Date.now() + (120 * 60 * 1000)) // expires in two hours
 }));
+app.use(express.urlencoded());
 app.use(express.session({
     secret: serverConf.serverSecret,
     store: store
@@ -273,7 +274,7 @@ Services= (function(){
         console.log("                      ---------------------------------");
         
         write.out('checkpoint', 'Initializing...');
-        write.out('info', 'Hit '+colors.yellow.bold("q")+' to exit by any time');
+        write.out('info', 'Type '+colors.yellow("q/quit/exit")+' to exit by any time');
 
 
         // listeners
@@ -283,7 +284,11 @@ Services= (function(){
         io.sockets.on('connection', _socketsEvents);
 
         // just announcing the server initialization...
-        write.out('checkpoint', 'HTTP server listening on port '+ colors.yellow.bold((server.address()? server.address().port: '????')));
+        if(server){
+            write.out('checkpoint', 'HTTP server listening on port '+ colors.yellow(serverConf.port));
+        }else{
+            write.out('warning', "It was not possible to start the server at port "+serverConf.port+"!\nPlease verify if you have permission to do so.\n");
+        }
         if(_token)
             write.out('checkpoint', 'Your token is ' + _token);
 
