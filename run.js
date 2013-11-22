@@ -264,10 +264,16 @@ Services= (function(){
             deliver(req.url, req, res);
         });
         
-        console.log("+========================================================+");
-        console.log("|                    Power Polygon Web                   |");
-        console.log("+========================================================+");
+        console.log("+==========================================================================+");
+        console.log("|                             Power Polygon Web                            |");
+        console.log("+==========================================================================+");
+        console.log(' Thanks for using Power Polygon.');
+        console.log(' Please report any issue at ', colors.yellow.underline("http://github.com/braziljs/power-polygon/"));
+        console.log(' Check the licenses at ppw/_licenses');
+        console.log("                      ---------------------------------");
+        
         write.out('checkpoint', 'Initializing...');
+        write.out('info', 'Hit '+colors.yellow.bold("q")+' to exit by any time');
 
 
         // listeners
@@ -277,12 +283,24 @@ Services= (function(){
         io.sockets.on('connection', _socketsEvents);
 
         // just announcing the server initialization...
-        write.out('checkpoint', 'HTTP server listening on port '+ colors.yellow((server.address()? server.address().port: '????')));
+        write.out('checkpoint', 'HTTP server listening on port '+ colors.yellow.bold((server.address()? server.address().port: '????')));
         if(_token)
             write.out('checkpoint', 'Your token is ' + _token);
 
-        //
         startWatching();
+        
+        rl.question("",
+                    function(answer){
+                        answer= answer.toLowerCase();
+                        if(   answer == 's'
+                           || answer == 'q'
+                           || answer == 'stop'
+                           || answer == 'exit'
+                           || answer == 'quit'){
+                            write.out('checkpoint', 'Power Polygon service finished');
+                            process.exit();
+                        }
+                    });
     };
 
     return {
