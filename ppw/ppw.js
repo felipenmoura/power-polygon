@@ -768,7 +768,6 @@ window.PPW = (function ($, _d, console){
                              .split('/')
                              .pop();
 
-
        /** 0/false: no messages
         *   1: errors
         *   2: errors and warnings
@@ -851,7 +850,6 @@ window.PPW = (function ($, _d, console){
 
         if(msg)
             console.log("[PPW] Loaded: ", msg);
-        console.log(_conf.curLoaded, _conf.loadSteps, perc+'%');
 
         if(perc >= 100){
 
@@ -874,6 +872,9 @@ window.PPW = (function ($, _d, console){
                 else
                     _preloadSlides(function(){$('#ppw-lock-loading').fadeOut();});
             }
+            
+            //if(_conf.isServerRequest)
+                window.publicServerInformation= _settings;
         }
     };
 
@@ -989,7 +990,7 @@ window.PPW = (function ($, _d, console){
     var _loadStyle= function(src, loadStep, fn, bind){
 
         if(loadStep && !_conf.isServerRequest){
-            // apparently, phantomjs cannot understand when a css has been loaded
+            // apparently, phantomjs cannot understand when a css has been loaded :/
             _conf.loadSteps++;
         }
 
@@ -2381,11 +2382,62 @@ window.PPW = (function ($, _d, console){
      * @return string URL.
      */
     var _getSlideURL= function(id, idx){
-
         return _settings.fsPattern
                         .replace(/\%id/gi, id)
                         .replace(/\%num/gi, idx)
                             + (!_settings.slidesCache? ('?noCache='+(new Date()).getTime()) : '');
+    }
+    
+    var _loadSlide= function(slideId, i){
+        var slide= _settings.slides[_getCurrentSlideFromURL(slideId)];
+        $.ajax({
+            url: _getSlideURL(slideId, i||0),
+            success: (function(slide, i){
+                        return function(data, status, xhr){
+                            
+                                    var el= _d.getElementById(slide.id),
+                                        tt= null;
+
+                                    el.innerHTML= data;
+                                    slide.el= el;
+                                    tt= $(el).find('h1, h2, h3, h4, h5, h6')[0];
+                                    tt= tt? tt.innerHTML: el.textContent.substring(0, _conf.defaults.slideTitleSize);
+                                    slide.title= tt;
+                                    slide.index= i+1;
+                                    slide.errors= 0;
+
+                                    $(el).find("script").each(function(i, scr){
+
+                                        var f= new Function("PPW.slideIterator= this; "+scr.textContent);
+
+                                        try{
+                                            f.apply(slide);
+                                        }catch(e){
+                                            console.error("[PPW][Script loaded from slide] There was an error on a script, loaded in one of your slides!", e)
+                                        }
+                                    });
+                                    _slidePreloaderNext(_settings.slides[i]);
+                                }
+                    })(slide, i),
+            error: (function(slide, i){
+                return function(){
+
+                    var el= _d.getElementById(slide.id),
+                        addr= _settings.fsPattern.replace(/\%id/g, slide.id);
+
+                    slide.el= el;
+                    slide.title= tt;
+                    slide.index= i+1;
+                    slide.errors= 1;
+
+                    $(el).addClass('ppw-slide-not-found')
+                         .html(_templates.slideNotFound.replace(/\{\{slideid\}\}/g, slide.id).replace('{{addr}}', addr, 'g'));
+
+                    console.error("[PPW][Slide loading]: Slide not found!", slide);
+                    _slidePreloaderNext();
+                }
+            })(slide, i)
+        })
     }
 
     /**
@@ -2436,54 +2488,8 @@ window.PPW = (function ($, _d, console){
                 //nEl.id= slides[i].id;
                 container.appendChild(nEl[0]);
 
-                $.ajax(
-                    {
-                        url: _getSlideURL(slides[i].id, i),
-                        success: (function(slide, i){
-                                    return function(data, status, xhr){
-                                                var el= _d.getElementById(slide.id),
-                                                    tt= null;
+                _loadSlide(slides[i].id, i);
 
-                                                el.innerHTML= data;
-                                                _settings.slides[i].el= el;
-                                                tt= $(el).find('h1, h2, h3, h4, h5, h6')[0];
-                                                tt= tt? tt.innerHTML: el.textContent.substring(0, _conf.defaults.slideTitleSize);
-                                                _settings.slides[i].title= tt;
-                                                _settings.slides[i].index= i+1;
-                                                _settings.slides[i].errors= 0;
-
-                                                $(el).find("script").each(function(i, scr){
-
-                                                    var f= new Function("PPW.slideIterator= this; "+scr.textContent);
-
-                                                    try{
-                                                        f.apply(slide);
-                                                    }catch(e){
-                                                        console.error("[PPW][Script loaded from slide] There was an error on a script, loaded in one of your slides!", e)
-                                                    }
-                                                });
-                                                _slidePreloaderNext(_settings.slides[i]);
-                                            }
-                                })(slides[i], i),
-                        error: (function(slide, i){
-                            return function(){
-
-                                var el= _d.getElementById(slide.id),
-                                    addr= _settings.fsPattern.replace(/\%id/g, slide.id);
-
-                                _settings.slides[i].el= el;
-                                _settings.slides[i].title= tt;
-                                _settings.slides[i].index= i+1;
-                                _settings.slides[i].errors= 1;
-
-                                $(el).addClass('ppw-slide-not-found')
-                                     .html(_templates.slideNotFound.replace(/\{\{slideid\}\}/g, slide.id).replace('{{addr}}', addr, 'g'));
-
-                                console.error("[PPW][Slide loading]: Slide not found!", slide);
-                                _slidePreloaderNext();
-                            }
-                        })(slides[i], i)
-                    });
                 el= $('section#'+slides[i].id);
             }else{
                 // the slide content is already on the DOM
@@ -3785,8 +3791,8 @@ window.PPW = (function ($, _d, console){
     /**
      * Returns the index of the current slide based on the url.
      */
-    var _getCurrentSlideFromURL= function(){
-        var h= _l.hash? _l.hash.replace(_settings.hashSeparator, '')||_settings.slides[0].idx : 0,
+    var _getCurrentSlideFromURL= function(slide){
+        var h= slide||(_l.hash? _l.hash.replace(_settings.hashSeparator, '')||_settings.slides[0].idx : 0),
             i= _settings.slides.length,
             extraPath= false;
 

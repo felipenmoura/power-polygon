@@ -2,20 +2,7 @@
 
 var fs = require('fs');
 var write= require('./write.js');
-
-/*
-var Talk= function(name){
-    var tSrc= 'talks/'+name+'/index.html';
-    if(fs.existsSync(tSrc)){
-    
-        page.open('http://github.com/', function () {
-            page.viewportSize = { width: 1024, height: 768 };
-            page.render('');
-            phantom.exit();
-        });
-    }
-};
-};*/
+var thumb= require('./thumbnail.js');
 
 var parsePath= function(path){
     
@@ -53,62 +40,17 @@ var parsePath= function(path){
               write.out('info', 'new file added[nothing to do with it]');
           })
           .on('change', function(path) {
-              var file= parsePath(path),
-                  serverData= server._connectionKey.split(':'),
-                  urlToPrint= 'http://'+serverData[1]+':'+serverData[2]+'/talks/';
               
-              if(!file)
-                  return false;
+              var file= parsePath(path);
+      
               write.out('info', 'file changed(running tasks in background)');
-              
-              urlToPrint+= file.talk+'/?serverRequest='+(file.slide || 'true');
-              urlToPrint+= '&transition=trans-cut';
-              if(file.isSlide){
-                  urlToPrint+= '#'+file.slide;
+              if(!file.slide){
+                  // index was changed, lets generate thumbs for all the internal slides
+                  thumb.generate(file.talk);
               }else{
-                  
-              }
-              console.log(urlToPrint);
-              
-              // verify directories and files
-              tmpFilesDir= 'ppw/tmp/talks/'+file.talk;
-              console.log('============ VOU VERIFICAR SE EXISTE', tmpFilesDir, fs.existsSync(tmpFilesDir));
-              if(!fs.existsSync(tmpFilesDir)){
-                  console.log('============ NAO EXISTIA, VOU CRIAR');
-                  fs.mkdirSync(tmpFilesDir);
-                  console.log('============ CRIEI');
-              }else{
-                  
+                  thumb.generate(file.talk, file.slide);
               }
               
-              // open url
-              if(global.phantomPage && global.phantomPage !== true){
-                  
-                  global.phantomPage.onConsoleMessage = function (msg) {
-                      //console.log('[ppw]', 'internal message: ', msg);
-                  };
-                  global.phantomPage.open(urlToPrint, function(status){
-                      //console.log('CARREGOU ', status);
-                      setTimeout(function(){
-                          var imgSrc= tmpFilesDir+ '/'+(file.slide||'cover');
-                          global.phantomPage.render(imgSrc+'.png');
-                          /*global.phantomPage.evaluate(function () {
-                              return document.title;
-                          }, function(result, a){
-                              console.log('[ppw]', 'Page title is ', result, a);
-                          });*/
-                            
-                          /*var resizer = require('resizer')
-                            , fs = require('fs')
-                            , inputImage = fs.createReadStream(imgSrc+'.png')
-                            , outputImage = fs.createWriteStream(imgSrc+'-thumb.png');*/
-
-                          //inputImage.pipe(resizer.contain({height: 225, width:300})).pipe(outputImage);
-                          write.out('info', "Generated thumbnail for '"+(file.slide||'cover')+"'");
-                          //console.log(99999999999999999, "Generating thumbnail for "+(file.slide||'cover'));
-                      }, 2000);
-                  });
-              }
               
               // TODO: get talkConf
               // if(talks/talkname/index.html)
@@ -123,7 +65,7 @@ var parsePath= function(path){
               // if(talks/talkname/slides/slidename/slidename.html)
               //     if(slide is in talkConf)
               //         create thumbs for that slide
-              editinTalk= file.talk;
+              
               if(file.isSlide){
                   
               }
