@@ -159,32 +159,33 @@ window.PPW = (function ($, _d, console){
 
         // internal configuration properties
         _conf= {
-            mode: 'presentation',
-            loadSteps: 0,
-            curLoaded: 0,
-            showingCamera: false,
-            showingMessage: false,
-            remoteControl: false,
-            messagesQueue: [],
-            preloadedSlidesCounter: 0,
-            cameraLoaded: false,
-            isMobile: false,
-            presentationTool: null,
-            currentLang: 'en',
-            profiles: {},
-            slidesLoaded: false,
-            themeLoaded: false,
-            fontSize: 100,
-            testingResolution: false,
-            currentZoom: 1,
-            currentRotate: 0,
-            locked: false,
-            zoomMax: 40,
-            showingToolBar: false,
-            currentSlide: 0,
-            presentationStarted: false,
-            inThumbsMode: false,
-            defaultRemoteServer: location.protocol +'//'+ location.host, // TODO: create and release the service online
+            mode                    : 'presentation',
+            loadSteps               : 0,
+            curLoaded               : 0,
+            showingCamera           : false,
+            showingMessage          : false,
+            remoteControl           : false,
+            isServerRequest         : false,
+            messagesQueue           : [],
+            preloadedSlidesCounter  : 0,
+            cameraLoaded            : false,
+            isMobile                : false,
+            presentationTool        : null,
+            currentLang             : 'en',
+            profiles                : {},
+            slidesLoaded            : false,
+            themeLoaded             : false,
+            fontSize                : 100,
+            testingResolution       : false,
+            currentZoom             : 1,
+            currentRotate           : 0,
+            locked                  : false,
+            zoomMax                 : 40,
+            showingToolBar          : false,
+            currentSlide            : 0,
+            presentationStarted     : false,
+            inThumbsMode            : false,
+            defaultRemoteServer     : location.protocol +'//'+ location.host, // TODO: create and release the service online
 
             // a default css format
             prevStyle: {
@@ -850,6 +851,7 @@ window.PPW = (function ($, _d, console){
 
         if(msg)
             console.log("[PPW] Loaded: ", msg);
+        console.log(_conf.curLoaded, _conf.loadSteps, perc+'%');
 
         if(perc >= 100){
 
@@ -986,7 +988,8 @@ window.PPW = (function ($, _d, console){
      */
     var _loadStyle= function(src, loadStep, fn, bind){
 
-        if(loadStep){
+        if(loadStep && !_conf.isServerRequest){
+            // apparently, phantomjs cannot understand when a css has been loaded
             _conf.loadSteps++;
         }
 
@@ -2786,20 +2789,25 @@ window.PPW = (function ($, _d, console){
 //            _loadStyle(_createPPWSrcPath('/_styles/introjs.css'), true, function(){_setLoadingBarStatus('IntroJS.css');}, true);
             //_w.localStorage.setItem('ppw-newDesignIntroduction', true);
         }
-        
-        _loadScript(_createPPWSrcPath('/_scripts/intro.js'), true, function(){
-            introJs().setOptions({
-                skipLabel: 'Exit',
-                tooltipPosition: 'top',
-                showStepNumbers: false,
-                exitOnOverlayClick: false,
-                exitOnEsc: true
+        if(_conf.isServerRequest){
+            _settings.useToolBar= false;
+            _settings.useSplashScreen= false;
+            $b.addClass('isServerRequest');
+        }else{
+            _loadScript(_createPPWSrcPath('/_scripts/intro.js'), true, function(){
+                introJs().setOptions({
+                    skipLabel: 'Exit',
+                    tooltipPosition: 'top',
+                    showStepNumbers: false,
+                    exitOnOverlayClick: false,
+                    exitOnEsc: true
+                });
+                _setLoadingBarStatus('IntroJS.js');
             });
-            _setLoadingBarStatus('IntroJS.js');
-        });
-        _loadStyle(_createPPWSrcPath('/_styles/introjs.css'), true, function(){
-            _setLoadingBarStatus('IntroJS.css');
-        }, true);
+            _loadStyle(_createPPWSrcPath('/_styles/introjs.css'), true, function(){
+                _setLoadingBarStatus('IntroJS.css');
+            }, true);
+        }
 
         _preparePPW();
 
@@ -2977,13 +2985,10 @@ window.PPW = (function ($, _d, console){
                                 //}
                             }
                         });
-                        /*_w.introJs().onexit(function(target){
-                            alert(9);
-                        });
-                        _w.introJs().oncomplete(function(target){
-                            alert(8);
-                        });*/
+                        
+                        if(!_conf.isServerRequest)
                         _w.introJs().start();
+                        
                         $('.introjs-helperLayer').css('top', '+=20px');
                     }, 3000);
                 }
@@ -4849,6 +4854,9 @@ window.PPW = (function ($, _d, console){
             _settings.Google= false;
             $(document.body).addClass('remote-controller');
             top.ppwFrame= _w.PPW;
+        }
+        if(_querystring('serverRequest')){
+            _conf.isServerRequest= true;
         }
 
         var isMobile= false;

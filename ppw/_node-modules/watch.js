@@ -1,85 +1,9 @@
 "use strict";
 
 var fs = require('fs');
-
-global.phantomjs= require('phantomjs');
-
-// https://github.com/gruntjs/grunt-lib-phantomjs
-
-//var page = require('webpage').create();
-/*global.phantomjs.create(function(ph) {
-    console.log('created');
-});*/
-
-//var phantom = require('phantomjs');
-//var page = require('webpage').create();
-//var phantomjsWrapper = require('phantomjs-wrapper');
-
-//phantomjsWrapper({timeout: 60000}, function(err, phantomjs) {
-  //phantomjs.createPage(function(err, page) {
-    //page.open('http://www.google.com', function(err) {
-      /*page.on('alert', function(msg) {
-        console.log('Alert:', msg);
-      }); */
-      /*page.once('loadFinished', function() {
-        page.render('google-reloaded.png', function() {
-          page.close(function() {
-            phantomjs.close(function() {
-              console.log('done!');
-            }); 
-         });
-        });
-      });*/
-      /*page.evaluateJavaScript('(function() { alert("hello!"); })');
-      page.includeJs('http://code.jquery.com/jquery-2.0.3.min.js', function() {
-        page.evaluateJavaScript('(function() { $("a").remove(); })');
-        page.render('google-no-anchors.png', function() {
-          page.reload();
-        });
-      });*/
-    //});
-  //});
-//});
-
-
-
-
-/*var phantom = require('phantomjs');
-phantom.create(function(ph) {
-  return ph.createPage(function(page) {
-    return page.open("http://www.google.com", function(status) {
-      console.log("opened google? ", status);
-      return page.evaluate((function() {
-        return document.title;
-      }), function(result) {
-        console.log('Page title is ' + result);
-        return ph.exit();
-      });
-    });
-  });
-});*/
-
+var write= require('./write.js');
 
 /*
-var isTalkIndex= function(path){
-    
-};
-var isTalkDir= function(path){
-    
-};
-
-var isSlide= function(path){
-    
-};
-
-var getTalk= function(path){
-    
-};
-
-var getTalkConf= function(){
-    
-};
-
 var Talk= function(name){
     var tSrc= 'talks/'+name+'/index.html';
     if(fs.existsSync(tSrc)){
@@ -89,13 +13,8 @@ var Talk= function(name){
             page.render('');
             phantom.exit();
         });
-    
     }
 };
-
-var getTalkConf= function(talk){
-    var t= new Talk(talk);
-    console.log(t);
 };*/
 
 var parsePath= function(path){
@@ -114,16 +33,16 @@ var parsePath= function(path){
     }
     if(path[1] != 'index.html'){
         ret.isSlide= true;
-        ret.slide= path[path.length -2]
+        ret.slide= path[path.length -2];
     }
     
-    console.log(ret);
     return ret;
 };
 
 (function(){
     
-    var write= require('./write.js');
+    var editinTalk= null,
+        tmpFilesDir= false;
     
     exports.watch= function(dir, conf){
         var chokidar = require('chokidar');
@@ -134,12 +53,63 @@ var parsePath= function(path){
               write.out('info', 'new file added[nothing to do with it]');
           })
           .on('change', function(path) {
-              var file= parsePath(path);
+              var file= parsePath(path),
+                  serverData= server._connectionKey.split(':'),
+                  urlToPrint= 'http://'+serverData[1]+':'+serverData[2]+'/talks/';
               
               if(!file)
                   return false;
+              write.out('info', 'file changed(running tasks in background)');
               
-              write.out('info', 'file changed');
+              urlToPrint+= file.talk+'/?serverRequest='+(file.slide || 'true');
+              urlToPrint+= '&transition=trans-cut';
+              if(file.isSlide){
+                  urlToPrint+= '#'+file.slide;
+              }else{
+                  
+              }
+              console.log(urlToPrint);
+              
+              // verify directories and files
+              tmpFilesDir= 'ppw/tmp/talks/'+file.talk;
+              console.log('============ VOU VERIFICAR SE EXISTE', tmpFilesDir, fs.existsSync(tmpFilesDir));
+              if(!fs.existsSync(tmpFilesDir)){
+                  console.log('============ NAO EXISTIA, VOU CRIAR');
+                  fs.mkdirSync(tmpFilesDir);
+                  console.log('============ CRIEI');
+              }else{
+                  
+              }
+              
+              // open url
+              if(global.phantomPage && global.phantomPage !== true){
+                  
+                  global.phantomPage.onConsoleMessage = function (msg) {
+                      //console.log('[ppw]', 'internal message: ', msg);
+                  };
+                  global.phantomPage.open(urlToPrint, function(status){
+                      //console.log('CARREGOU ', status);
+                      setTimeout(function(){
+                          var imgSrc= tmpFilesDir+ '/'+(file.slide||'cover');
+                          global.phantomPage.render(imgSrc+'.png');
+                          /*global.phantomPage.evaluate(function () {
+                              return document.title;
+                          }, function(result, a){
+                              console.log('[ppw]', 'Page title is ', result, a);
+                          });*/
+                            
+                          /*var resizer = require('resizer')
+                            , fs = require('fs')
+                            , inputImage = fs.createReadStream(imgSrc+'.png')
+                            , outputImage = fs.createWriteStream(imgSrc+'-thumb.png');*/
+
+                          //inputImage.pipe(resizer.contain({height: 225, width:300})).pipe(outputImage);
+                          write.out('info', "Generated thumbnail for '"+(file.slide||'cover')+"'");
+                          //console.log(99999999999999999, "Generating thumbnail for "+(file.slide||'cover'));
+                      }, 2000);
+                  });
+              }
+              
               // TODO: get talkConf
               // if(talks/talkname/index.html)
               //     go through slides verifying if they exist
@@ -153,6 +123,10 @@ var parsePath= function(path){
               // if(talks/talkname/slides/slidename/slidename.html)
               //     if(slide is in talkConf)
               //         create thumbs for that slide
+              editinTalk= file.talk;
+              if(file.isSlide){
+                  
+              }
           })
           .on('unlink', function(path) {
               write.out('info', 'file deleted');
@@ -166,8 +140,5 @@ var parsePath= function(path){
           .on('error', function(error) {
               write.out('error', 'There was a problem watching a file!', error);
           });
-
-        write.out('checkpoint', "Listening for changes on talks and slides");
-        
     };
 })();

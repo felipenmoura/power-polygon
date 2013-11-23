@@ -7,8 +7,69 @@ var serverConf= {
     serverSecret: 'onlyMeAndGitHubUsersKnowIt! - Please,change this for your use'
 }
 
+var thirdPartyLog= {warn:[], log:[]};
 var colors= require('cli-color');
 var write= require('./ppw/_node-modules/write.js');
+
+var originalLog= console.log;
+console.log = function(){
+    if(arguments[0] == '[ppw]'){
+        var ar= Array.prototype.slice.call(arguments, 1);
+        originalLog.apply(this, ar);
+    }else{
+        //thirdPartyLog.log.push(arguments);
+    }
+};
+
+console.warning= console.warn= function(){
+    if(arguments[0] == '[ppw]'){
+        var ar= Array.prototype.slice.call(arguments, 1);
+        originalLog.apply(this, ar);
+    }else{
+        thirdPartyLog.warn.push(arguments);
+    }
+    if(thirdPartyLog.warn.length > 100){
+        write.out('warning', 'There are '+thirdPartyLog.warn.length+" warning messages from third party modules!");
+        rl.question("Would you like to see them all?\nType YES to show the messages and clean the list or NO to just clean the list\n > ",
+                    function(answer){
+                        if(answer.toLowerCase() == 'yes'){
+                            console.log('[ppw]', thirdPartyLog.warn);
+                        }
+                        thirdPartyLog.warn= [];
+                    });
+    }
+};
+
+var page = null;
+
+//global.phantomjs= require('phantomjs');
+
+try{
+    global.phantom=require('node-phantom');
+    // logLevel: 'silent'
+    if(!phantom.create)
+        throw new Error('no phantomjs found');
+    global.phantomPage= true;
+    phantom.create(function(err,ph) {
+        return ph.createPage(function(err,page) {
+            write.out('info', "Listening for changes on talks and slides");
+            page.set('viewportSize', { width: 1024, height: 768 });
+            page.set('settings.loadImages', true);
+            page.logLevel= 'silent';
+            
+            /*page.onConsoleMessage = function(msg) {
+                //system.stderr.writeLine('console: ' + msg);
+                //return false;
+            };*/
+            global.phantomPage= page;
+            write.out('info', 'Talk emulator started in background');
+        });
+    });
+    //page= require('webpage');
+}catch(e){
+    global.phantomPage= false;
+    console.log(9999999, e)
+}
 
 /* DEFINITIONS */
 var express = require('express')
@@ -265,35 +326,56 @@ Services= (function(){
             deliver(req.url, req, res);
         });
         
-        console.log("+==========================================================================+");
-        console.log("|                             Power Polygon Web                            |");
-        console.log("+==========================================================================+");
-        console.log(' Thanks for using Power Polygon.');
-        console.log(' Please report any issue at ', colors.yellow.underline("http://github.com/braziljs/power-polygon/"));
-        console.log(' Check the licenses at ppw/_licenses');
-        console.log("                      ---------------------------------");
+        console.log('[ppw]', "+==========================================================================+");
+        console.log('[ppw]', "|                             Power Polygon Web                            |");
+        console.log('[ppw]', "+==========================================================================+");
+        console.log('[ppw]', ' Thanks for using Power Polygon.');
+        console.log('[ppw]', ' Please report any issue at ', colors.yellow.underline("http://github.com/braziljs/power-polygon/"));
+        console.log('[ppw]', ' Check the licenses at ppw/_licenses');
+        write.out('line');
         
         write.out('checkpoint', 'Initializing...');
         write.out('info', 'Type '+colors.yellow("q/quit/exit")+' to exit by any time');
 
-
         // listeners
-        write.out('checkpoint', 'Starting socket interface');
         server= app.listen(serverConf.port);
-        io= require('socket.io').listen(server, {log: false});
-        io.sockets.on('connection', _socketsEvents);
-
+        global.server= server;
         // just announcing the server initialization...
         if(server){
             write.out('checkpoint', 'HTTP server listening on port '+ colors.yellow(serverConf.port));
+            write.out('info', 'Access your HTTP server in your browser like this:');
+            write.out('info', '   '+colors.underline('http://yourIP:'+serverConf.port+ '/'));
+            //write.out('line');
         }else{
             write.out('warning', "It was not possible to start the server at port "+serverConf.port+"!\nPlease verify if you have permission to do so.\n");
         }
+        
+        write.out('checkpoint', 'Starting sockets interface');
+        io= require('socket.io').listen(server, {log: false});
+        io.sockets.on('connection', _socketsEvents);
+        write.out('info', 'Sockets allow you to control your talk remotelly');
+        //write.out('line');
+        
         if(_token)
             write.out('checkpoint', 'Your token is ' + _token);
 
-        startWatching();
-        
+        if(!global.phantomPage){
+            write.out('warning', 'Failed loading phantomJS!');
+            write.out('info', 'That means no thumbnails can be created for your slides.');
+            write.out('info', 'Please install PhantonJS in order to have slides');
+            write.out('info', 'thumbnails and a better printable version of your talk.');
+        }else{
+            write.out('checkpoint', 'PhantomJS identified');
+            write.out('info', 'With PhantomJS you can:');
+            write.out('info', '   Use a better printable version for your talk');
+            write.out('info', '   See thumbnails for your slides in presentation tool');
+            write.out('info', '   See thumbnails for the first slide on startup screen');
+        }
+        write.out('line');
+        write.out('checkpoint', 'Initialized...starting services');
+        if(global.phantomPage)
+            startWatchingForChanges();
+        global.rl= rl;
         rl.question("",
                     function(answer){
                         answer= answer.toLowerCase();
@@ -302,7 +384,7 @@ Services= (function(){
                            || answer == 'stop'
                            || answer == 'exit'
                            || answer == 'quit'){
-                            write.out('checkpoint', 'Power Polygon service finished');
+                            write.out('info', 'Power Polygon service finished');
                             process.exit();
                         }
                     });
@@ -426,7 +508,7 @@ var getUser= function(req){
     }
 };
 
-var startWatching= function(){
+var startWatchingForChanges= function(){
     var eye= require("./ppw/_node-modules/watch.js");
     eye.watch('talks/',
               {

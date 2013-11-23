@@ -14,6 +14,9 @@ var write= function(type){
     }else if(type == 'step'){
         type= 'white'
         typeLabel= "                - ";
+    }else if(type == 'line'){
+        console.log('[ppw]', " --------------------------------------------------------------------------");
+        return;
     }else{
         type= 'white'
         typeLabel= "      ::        - ";
@@ -21,6 +24,7 @@ var write= function(type){
     
     var ar= Array.prototype.slice.call(arguments, 1);
     ar.unshift(colors[type](typeLabel));
+    ar.unshift('[ppw]');
     
     console.log.apply(this, ar);
 };
