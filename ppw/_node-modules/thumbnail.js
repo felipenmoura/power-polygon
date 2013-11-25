@@ -17,7 +17,17 @@ var evaluateLoaded= function(fn){
 };
 
 var generateInternalSlides= function(){
+    
     if(global.talkSlides){
+
+        var l= global.talkSlides.length;
+        
+        while(l && l--){
+            if(global.talkSlides[l].internal){
+                write.out('warn', global.talkSlides[l].id);
+            }
+        };
+write.out('warn', l, 'FINAL');
         // for each internal slide not yet generated
         //generate(talk, curSlide, generateInternalSlides);
         // mark curSlide as generated
@@ -57,13 +67,15 @@ exports.generate= function(talk, slide){
             global.phantomPage.onConsoleMessage = function(msg, line, source) {
                 if(msg.indexOf('====publicServerInformation====') >= 0){
                     global.talkSlides= JSON.parse(msg.replace(/\=\=\=\=publicServerInformation\=\=\=\=/g, ''));
+                    generateInternalSlides();
                 }
             }
         }else{
-            global.phantomPage.onConsoleMessage = function(msg, line, source) {});
+            global.phantomPage.onConsoleMessage = function(msg, line, source) {};
         }
-
+//write.out('info', urlToPrint);
         global.phantomPage.open(urlToPrint, function(status){
+            
             //setTimeout(function(){
                 if(slide){
                     var imgSrc= tmpFilesDir+ '/'+slide;
@@ -79,8 +91,7 @@ exports.generate= function(talk, slide){
                     // was the index file from a talk
                     write.out('info', 'Talk index changed, must get talk information');
                     write.out('info', 'and regenerate each internal slide...');
-                    
-                    generateInternalSlides();
+                    global.talkSlides= false;
                     
                     /*global.phantomPage.evaluate(function() {
                         return document.querySelectorAll('.ppw-slide-container');

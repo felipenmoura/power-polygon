@@ -699,10 +699,13 @@ window.PPW = (function ($, _d, console){
 
             if(!this.id)
                 this.id= "slide-"+i;
+            
+            this.className+= ' ppw-internalSlide';
 
             o.slides.push({
                 type: (i===0)? 'opening': (i==l)? 'closing': 'content',
-                id: this.id
+                id: this.id,
+                internal: true
             });
             i++;
         });
@@ -2404,6 +2407,7 @@ window.PPW = (function ($, _d, console){
                                     slide.title= tt;
                                     slide.index= i+1;
                                     slide.errors= 0;
+                                    slide.internal= false;
 
                                     $(el).find("script").each(function(i, scr){
 
@@ -2493,6 +2497,7 @@ window.PPW = (function ($, _d, console){
             }else{
                 // the slide content is already on the DOM
                 _settings.slides[i].el= el[0];
+                _settings.slides[i].internal= true;
                 tt= el.find('h1, h2, h3, h4, h5, h6')[0];
                 tt= tt? tt.innerHTML: el[0].textContent.substring(0, _conf.defaults.slideTitleSize);
                 _settings.slides[i].title= tt;
@@ -3682,7 +3687,8 @@ window.PPW = (function ($, _d, console){
                     actions: i.actions,
                     actionIdx: i.actionIdx,
                     title: i.title,
-                    index: i.index
+                    index: i.index,
+                    internal: i.internal||false
                 };
                 window.publicServerInformation.push(item);
                 return i;
