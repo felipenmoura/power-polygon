@@ -874,7 +874,6 @@ window.PPW = (function ($, _d, console){
             }
             
             //if(_conf.isServerRequest)
-                window.publicServerInformation= _settings;
         }
     };
 
@@ -3652,6 +3651,7 @@ window.PPW = (function ($, _d, console){
 
         _settings.presentationStarted= _conf.presentationStarted= (new Date()).getTime();
         _goToSlide(_getCurrentSlideFromURL());
+        
         if(el)
             el.blur();
 
@@ -3671,6 +3671,23 @@ window.PPW = (function ($, _d, console){
         if(evt){
             evt.preventDefault();
             return false;
+        }
+        
+        if(_conf.isServerRequest){
+            window.publicServerInformation= [];
+            _settings.slides.map(function(i){
+                var item= {
+                    id: i.id,
+                    type: i.type,
+                    actions: i.actions,
+                    actionIdx: i.actionIdx,
+                    title: i.title,
+                    index: i.index
+                };
+                window.publicServerInformation.push(item);
+                return i;
+            });
+            console.log('====publicServerInformation====', JSON.stringify(window.publicServerInformation), '====publicServerInformation====');
         }
     };
 
