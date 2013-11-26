@@ -4,7 +4,7 @@ var write= require('./write.js');
 global.editinTalk= null;
 global.talkSlides= null;
 
-var evaluateLoaded= function(fn){
+/*var evaluateLoaded= function(fn){
     write.out('info', 'Retrieving talk information');
     global.phantomPage.evaluate(function() {
         return window.publicServerInformation;
@@ -14,20 +14,28 @@ var evaluateLoaded= function(fn){
         else
             setTimeout(evaluateLoaded, 100);
     });
-};
+};*/
 
-var generateInternalSlides= function(){
+var generateInternalSlides= function(talk){
     
     if(global.talkSlides){
 
         var l= global.talkSlides.length;
-        
+
         while(l && l--){
-            if(global.talkSlides[l].internal){
-                write.out('warn', global.talkSlides[l].id);
+            
+            if(global.talkSlides[l] && global.talkSlides[l].internal && global.talkSlides[l].generated != true){
+                write.out('info', 'generating image for internal slide ', global.talkSlides[l].id);
+                
+                generate(talk, global.talkSlides[l].id, (function(l){
+                    return function(){
+                        global.talkSlides[l].generated= true;
+                        generateInternalSlides();
+                    }
+                })(l));
+                break;
             }
         };
-write.out('warn', l, 'FINAL');
         // for each internal slide not yet generated
         //generate(talk, curSlide, generateInternalSlides);
         // mark curSlide as generated
@@ -36,7 +44,9 @@ write.out('warn', l, 'FINAL');
     }
 }
 
-exports.generate= function(talk, slide){
+
+
+var generate= function(talk, slide, fn){
     var serverData= server._connectionKey.split(':'),
     urlToPrint= 'http://'+serverData[1]+':'+serverData[2]+'/talks/';
 
@@ -67,13 +77,14 @@ exports.generate= function(talk, slide){
             global.phantomPage.onConsoleMessage = function(msg, line, source) {
                 if(msg.indexOf('====publicServerInformation====') >= 0){
                     global.talkSlides= JSON.parse(msg.replace(/\=\=\=\=publicServerInformation\=\=\=\=/g, ''));
-                    generateInternalSlides();
+                    generateInternalSlides(talk);
                 }
             }
         }else{
             global.phantomPage.onConsoleMessage = function(msg, line, source) {};
         }
 //write.out('info', urlToPrint);
+        try{ global.phantomPage.close(); }catch(e){};
         global.phantomPage.open(urlToPrint, function(status){
             
             //setTimeout(function(){
@@ -85,8 +96,12 @@ exports.generate= function(talk, slide){
                     imgSrc+= '/'+slide;
                     //global.editinTalk
 
-                    global.phantomPage.render(imgSrc+'.png');
-                    write.out('info', "Generated thumbnail for '"+slide+"'");
+                    setTimeout(function(){
+                        global.phantomPage.render(imgSrc+'.png');
+                        write.out('info', "Generated thumbnail for '"+slide+"'");
+                        if(fn && typeof fn == 'function')
+                            fn(talk);
+                    }, 1000);
                 }else{
                     // was the index file from a talk
                     write.out('info', 'Talk index changed, must get talk information');
@@ -112,3 +127,5 @@ exports.generate= function(talk, slide){
     }
     
 }
+
+exports.generate= generate;

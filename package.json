@@ -19,7 +19,7 @@
     "grunt-contrib-uglify": "*",
     "phantomjs": "~1.9.2",
     "node-phantom": "~0.2.5",
-    "sqlite3": "*",
+    "sqlite3": "~2.1.19",
     "chokidar": "~0.7.1",
     "cli-color": "~0.2.3"
   }
