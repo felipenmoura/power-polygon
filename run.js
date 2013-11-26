@@ -49,21 +49,30 @@ try{
     // logLevel: 'silent'
     if(!phantom.create)
         throw new Error('no phantomjs found');
+    
     global.phantomPage= true;
     phantom.create(function(err,ph) {
-        return ph.createPage(function(err,page) {
-            write.out('info', "Listening for changes on talks and slides");
-            page.set('viewportSize', { width: 1024, height: 768 });
-            page.set('settings.loadImages', true);
-            page.logLevel= 'silent';
-            
-            /*page.onConsoleMessage = function(msg) {
-                //system.stderr.writeLine('console: ' + msg);
-                //return false;
-            };*/
-            global.phantomPage= page;
-            write.out('info', 'Talk emulator started in background');
-        });
+        if(ph && ph.createPage){
+            return ph.createPage(function(err,page) {
+                write.out('info', "Listening for changes on talks and slides");
+                page.set('viewportSize', { width: 1024, height: 768 });
+                page.set('settings.loadImages', true);
+                page.logLevel= 'silent';
+                
+                /*page.onConsoleMessage = function(msg) {
+                    //system.stderr.writeLine('console: ' + msg);
+                    //return false;
+                };*/
+                global.phantomPage= page;
+                write.out('checkpoint', 'starting services (2/2)');
+                write.out('info', 'Talk emulator started in background');
+            });
+        }else{
+            write.out('warn', 'starting services (2/2)');
+            write.out('info', 'phantomjs not found, no thumbnails will be');
+            write.out('info', 'generated for slides.');
+            return false;
+        }
     });
     //page= require('webpage');
 }catch(e){
@@ -372,7 +381,7 @@ Services= (function(){
             write.out('info', '   See thumbnails for the first slide on startup screen');
         }
         write.out('line');
-        write.out('checkpoint', 'Initialized...starting services');
+        write.out('checkpoint', 'Initialized...starting services (1/2)');
         if(global.phantomPage)
             startWatchingForChanges();
         global.rl= rl;
