@@ -2,9 +2,7 @@
   "name": "power-polygon",
   "description": "The definitive Presentation tool, based on free open web technologies.",
   "version": "0.0.1",
-  "author": "Felipe N. Moura<felipenmoura@gmail.com>",
-  "license": "MIT",
-  "repository": "http://github.com/braziljs/power-polygon",
+  "author": "Felipe N. Moura<felipenmoura@gmail.com> (http://felipenmoura.org)",
   "keywords": [
       "talk",
       "presentation",
@@ -12,15 +10,32 @@
       "html5",
       "browser"
   ],
+  "licenses": [{
+      "type": "MIT",
+      "url": "https://github.com/braziljs/power-polygon/blob/master/ppw/_licenses/powerpolygon"
+    }
+  ],
+  "main": "./run.js",
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:braziljs/power-polygon.git"
+  },
+  "engines": {
+    "node": ">=0.10.0"
+  },
   "dependencies": {
     "express": "*",
     "socket.io": "~0.9.13",
     "grunt": "*",
     "grunt-contrib-uglify": "*",
     "phantomjs": "~1.9.2",
+    "gm": "~1.13.3",
     "node-phantom": "~0.2.5",
     "sqlite3": "~2.1.19",
     "chokidar": "~0.7.1",
     "cli-color": "~0.2.3"
+  },
+  "bugs": {
+    "url": "https://github.com/braziljs/power-polygon/issues?state=open"
   }
 }
