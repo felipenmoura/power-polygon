@@ -31,7 +31,7 @@ var generateInternalSlides= function(talk){
                 generate(talk, global.talkSlides[i].id, (function(i){
                     return function(){
                         global.talkSlides[i].generated= true;
-                        generateInternalSlides();
+                        generateInternalSlides(talk);
                     }
                 })(i));
                 break;
