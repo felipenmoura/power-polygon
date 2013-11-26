@@ -20,19 +20,20 @@ var generateInternalSlides= function(talk){
     
     if(global.talkSlides){
 
-        var l= global.talkSlides.length;
+        var l= global.talkSlides.length,
+            i= 0;
 
-        while(l && l--){
+        for(i=0; i<l; i++){
             
-            if(global.talkSlides[l] && global.talkSlides[l].internal && global.talkSlides[l].generated != true){
-                write.out('info', 'generating image for internal slide ', global.talkSlides[l].id);
+            if(global.talkSlides[i] && global.talkSlides[i].internal && global.talkSlides[i].generated != true){
+                write.out('info', 'generating image for internal slide ', global.talkSlides[i].id);
                 
-                generate(talk, global.talkSlides[l].id, (function(l){
+                generate(talk, global.talkSlides[i].id, (function(i){
                     return function(){
-                        global.talkSlides[l].generated= true;
+                        global.talkSlides[i].generated= true;
                         generateInternalSlides();
                     }
-                })(l));
+                })(i));
                 break;
             }
         };
@@ -61,8 +62,13 @@ var generate= function(talk, slide, fn){
     }
 
     // verify directories and files
-    tmpFilesDir= 'ppw/tmp/talks/'+talk;
+    tmpFilesDir= 'ppw/tmp/talks/';
     
+    if(!fs.existsSync(tmpFilesDir)){
+        fs.mkdirSync(tmpFilesDir);
+    }
+    
+    tmpFilesDir+= talk;
     if(!fs.existsSync(tmpFilesDir)){
         fs.mkdirSync(tmpFilesDir);
     }
@@ -84,7 +90,7 @@ var generate= function(talk, slide, fn){
             global.phantomPage.onConsoleMessage = function(msg, line, source) {};
         }
 //write.out('info', urlToPrint);
-        try{ global.phantomPage.close(); }catch(e){};
+        //try{ global.phantomPage.close(); }catch(e){};
         global.phantomPage.open(urlToPrint, function(status){
             
             //setTimeout(function(){
