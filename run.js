@@ -64,11 +64,11 @@ try{
                     //return false;
                 };*/
                 global.phantomPage= page;
-                write.out('checkpoint', 'starting services (2/2)');
+                write.out('checkpoint', '2/2 :: Starting services');
                 write.out('info', 'Talk emulator started in background');
             });
         }else{
-            write.out('warn', 'starting services (2/2)');
+            write.out('warn', '2/2 :: Starting services');
             write.out('info', 'phantomjs not found, no thumbnails will be');
             write.out('info', 'generated for slides.');
             return false;
@@ -381,7 +381,7 @@ Services= (function(){
             write.out('info', '   See thumbnails for the first slide on startup screen');
         }
         write.out('line');
-        write.out('checkpoint', 'Initialized...starting services (1/2)');
+        write.out('checkpoint', '1/2 :: Initialized...starting services');
         if(global.phantomPage)
             startWatchingForChanges();
         global.rl= rl;

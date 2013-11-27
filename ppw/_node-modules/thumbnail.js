@@ -1,6 +1,7 @@
 
 var fs = require('fs');
 var write= require('./write.js');
+var talkIndexGeneratesAll= false;
 global.editinTalk= null;
 global.talkSlides= null;
 
@@ -21,25 +22,33 @@ var generateInternalSlides= function(talk){
     if(global.talkSlides){
 
         var l= global.talkSlides.length,
-            i= 0;
+            i= 0, count= 0, found= 0, slideIdx= 0;
+            picked= false;
 
         for(i=0; i<l; i++){
             
-            if(global.talkSlides[i] && global.talkSlides[i].internal && global.talkSlides[i].generated != true){
-                write.out('info', 'generating image for internal slide ', global.talkSlides[i].id);
-                
-                generate(talk, global.talkSlides[i].id, (function(i){
-                    return function(){
-                        global.talkSlides[i].generated= true;
-                        generateInternalSlides(talk);
-                    }
-                })(i));
-                break;
+            if(global.talkSlides[i] && (talkIndexGeneratesAll || global.talkSlides[i].internal)){
+                count++;
+                found++;
+                if(global.talkSlides[i].generated != true && !picked){
+                    
+                    generate(talk, global.talkSlides[i].id, (function(i){
+                        return function(){
+                            global.talkSlides[i].generated= true;
+                            generateInternalSlides(talk);
+                        }
+                    })(i), true);
+                    picked= found;
+                    slideIdx= i;
+                }
             }
         };
-        // for each internal slide not yet generated
-        //generate(talk, curSlide, generateInternalSlides);
-        // mark curSlide as generated
+        if(picked)
+            write.out('info', picked+'/'+count+ ' :: Generating slide "'+ global.talkSlides[slideIdx].id + '"');
+        else{
+            talkIndexGeneratesAll= false;
+            //write.out('checkpoint', 'Done')
+        }
     }else{
         setTimeout(generateInternalSlides, 1000);
     }
@@ -47,7 +56,7 @@ var generateInternalSlides= function(talk){
 
 
 
-var generate= function(talk, slide, fn){
+var generate= function(talk, slide, fn, auto){
     var serverData= server._connectionKey.split(':'),
     urlToPrint= 'http://'+serverData[1]+':'+serverData[2]+'/talks/';
 
@@ -79,16 +88,21 @@ var generate= function(talk, slide, fn){
         //global.phantomPage.injectScript(function (msg) {
             
         //});
-        if(!slide){
-            global.phantomPage.onConsoleMessage = function(msg, line, source) {
+        
+        global.phantomPage.onConsoleMessage = function(msg, line, source) {
+            if(!auto){
                 if(msg.indexOf('====publicServerInformation====') >= 0){
-                    global.talkSlides= JSON.parse(msg.replace(/\=\=\=\=publicServerInformation\=\=\=\=/g, ''));
-                    generateInternalSlides(talk);
+                    var json= msg.replace(/\=\=\=\=publicServerInformation\=\=\=\=/g, '');
+                    global.talkSlides= JSON.parse(json);
+                    fs.writeFile(tmpFilesDir+'/'+talk+'.json', json, function(){});
+                    
+                    if(!slide){
+                        generateInternalSlides(talk);
+                    }
                 }
             }
-        }else{
-            global.phantomPage.onConsoleMessage = function(msg, line, source) {};
         }
+        
 //write.out('info', urlToPrint);
         //try{ global.phantomPage.close(); }catch(e){};
         global.phantomPage.open(urlToPrint, function(status){
@@ -104,7 +118,7 @@ var generate= function(talk, slide, fn){
 
                     setTimeout(function(){
                         global.phantomPage.render(imgSrc+'.png');
-                        write.out('info', "Generated thumbnail for '"+slide+"'");
+                        write.out('info', "Done generating thumbnail for '"+slide+"'");
                         if(fn && typeof fn == 'function')
                             fn(talk);
                     }, 1000);
@@ -114,16 +128,6 @@ var generate= function(talk, slide, fn){
                     write.out('info', 'and regenerate each internal slide...');
                     global.talkSlides= false;
                     
-                    /*global.phantomPage.evaluate(function() {
-                        return document.querySelectorAll('.ppw-slide-container');
-                    }, function(x, information){
-                        write.out('warn', x, information);
-                    });*/
-                    /*evaluateLoaded(function(information){
-                        // set the editingTalk information(talk settings)
-                        write.out('info', 'Got talk information, generating all the internal slides');
-                        //console.log('[ppw]', information);
-                    });*/
                 }
                 
             //}, 1000);

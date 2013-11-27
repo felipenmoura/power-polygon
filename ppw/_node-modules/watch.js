@@ -43,11 +43,12 @@ var parsePath= function(path){
               
               var file= parsePath(path);
       
-              write.out('info', 'file changed(running tasks in background)');
               if(!file.slide){
                   // index was changed, lets generate thumbs for all the internal slides
+                  write.out('info', 'Talk "'+file.talk+'" changed');
                   thumb.generate(file.talk, false);
               }else{
+                  write.out('info', 'Slide "'+file.slide+'" changed');
                   thumb.generate(file.talk, file.slide);
               }
               
