@@ -48,28 +48,14 @@ var parsePath= function(path){
                   write.out('info', 'Talk "'+file.talk+'" changed');
                   thumb.generate(file.talk, false);
               }else{
+                  // an external slide was changed, generate thumbnail for this slide only
                   write.out('info', 'Slide "'+file.slide+'" changed');
                   thumb.generate(file.talk, file.slide);
               }
               
-              
-              // TODO: get talkConf
-              // if(talks/talkname/index.html)
-              //     go through slides verifying if they exist
-              //     if(slide doesn't exist)
-              //        create slide structure using a slide boilerplate
-              //     create reference in temp dir for the talk
-              //     stop previous proccess for the talk, if any
-              //     create thumbs from slide
-              // if(talks/talkname) // renamed
-              //     rename reference in tmp dir
-              // if(talks/talkname/slides/slidename/slidename.html)
-              //     if(slide is in talkConf)
-              //         create thumbs for that slide
-              
-              if(file.isSlide){
+              /*if(file.isSlide){
                   
-              }
+              }*/
           })
           .on('unlink', function(path) {
               write.out('info', 'file deleted');

@@ -53,7 +53,7 @@ $(document).ready(function(){
             $(o.demos).each(function(){
                 str+= buildListElement(this, true);
             });
-            // TODO: analize what to do with this list...maybe, replace it by a tutorial!
+            
             ul.html(str);
 
             // building the list of talks

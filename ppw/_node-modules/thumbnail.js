@@ -1,9 +1,19 @@
 
 var fs = require('fs');
 var write= require('./write.js');
-var talkIndexGeneratesAll= false;
+var talkIndexGeneratesAll= true;
+var timeLimit= 6000;
+var timeOutObj= false;
+var PH= require('./phantom.js');
+var forcedGeneration= false;
 global.editinTalk= null;
 global.talkSlides= null;
+
+var copy= function(from, to){
+    var inStr = fs.createReadStream(from);
+    var outStr = fs.createWriteStream(to);
+    inStr.pipe(outStr);
+};
 
 /*var evaluateLoaded= function(fn){
     write.out('info', 'Retrieving talk information');
@@ -21,20 +31,21 @@ var generateInternalSlides= function(talk){
     
     if(global.talkSlides){
 
-        var l= global.talkSlides.length,
+        var slides= global.talkSlides.slides,
+            l= slides.length,
             i= 0, count= 0, found= 0, slideIdx= 0;
             picked= false;
 
         for(i=0; i<l; i++){
             
-            if(global.talkSlides[i] && (talkIndexGeneratesAll || global.talkSlides[i].internal)){
+            if(slides[i] && (talkIndexGeneratesAll || slides[i].internal)){
                 count++;
                 found++;
-                if(global.talkSlides[i].generated != true && !picked){
+                if(slides[i].generated != true && !picked){
                     
-                    generate(talk, global.talkSlides[i].id, (function(i){
+                    generate(talk, slides[i].id, (function(i){
                         return function(){
-                            global.talkSlides[i].generated= true;
+                            slides[i].generated= true;
                             generateInternalSlides(talk);
                         }
                     })(i), true);
@@ -44,7 +55,7 @@ var generateInternalSlides= function(talk){
             }
         };
         if(picked)
-            write.out('info', picked+'/'+count+ ' :: Generating slide "'+ global.talkSlides[slideIdx].id + '"');
+            write.out('info', picked+'/'+count+ ' :: Generating slide "'+ slides[slideIdx].id + '"');
         else{
             talkIndexGeneratesAll= false;
             //write.out('checkpoint', 'Done')
@@ -54,11 +65,35 @@ var generateInternalSlides= function(talk){
     }
 }
 
-
-
 var generate= function(talk, slide, fn, auto){
     var serverData= server._connectionKey.split(':'),
     urlToPrint= 'http://'+serverData[1]+':'+serverData[2]+'/talks/';
+
+    function render(fn, timeout){
+        if(!slide){
+            write.out('error', slide);
+            return true;
+        }
+        
+        var imgSrc= tmpFilesDir+ '/'+slide;
+        if(!fs.existsSync(imgSrc)){
+            fs.mkdirSync(imgSrc);
+        }
+        imgSrc+= '/'+slide;
+        //global.editinTalk
+
+        setTimeout((function(imgSrc, slide){
+            return function(){
+                global.phantomPage.render(imgSrc+'.png');
+                if(timeout)
+                    write.out('info', "Forced thumbnail generation for timeou("+slide+")");
+                else
+                    write.out('info', 'Generated thumbnail for "'+slide+'"');
+                if(fn && typeof fn == 'function')
+                    fn(talk);
+            }
+        })(imgSrc, slide), 1000);
+    };
 
     if(!talk)
         return false;
@@ -71,7 +106,7 @@ var generate= function(talk, slide, fn, auto){
     }
 
     // verify directories and files
-    tmpFilesDir= 'ppw/tmp/talks/';
+    var tmpFilesDir= 'ppw/tmp/talks/';
     
     if(!fs.existsSync(tmpFilesDir)){
         fs.mkdirSync(tmpFilesDir);
@@ -84,58 +119,49 @@ var generate= function(talk, slide, fn, auto){
     
     // open url(if phantomPage has loaded)
     if(global.phantomPage && global.phantomPage !== true){
-
-        //global.phantomPage.injectScript(function (msg) {
-            
-        //});
         
-        global.phantomPage.onConsoleMessage = function(msg, line, source) {
-            if(!auto){
-                if(msg.indexOf('====publicServerInformation====') >= 0){
-                    var json= msg.replace(/\=\=\=\=publicServerInformation\=\=\=\=/g, '');
-                    global.talkSlides= JSON.parse(json);
-                    fs.writeFile(tmpFilesDir+'/'+talk+'.json', json, function(){});
-                    
-                    if(!slide){
-                        generateInternalSlides(talk);
+        //global.phantomPage.onConsoleMessage = 
+        PH.load({
+            url: urlToPrint,
+            verbose: false,
+            oncreate: false,
+            console: function(msg, line, source) {
+
+                if(!auto){
+                    if(msg.indexOf('====publicServerInformation====') >= 0){
+                        var json= msg.replace(/\=\=\=\=publicServerInformation\=\=\=\=/g, '');
+                        global.talkSlides= JSON.parse(json);
+                        fs.writeFile(tmpFilesDir+'/'+talk+'.json', json, function(){});
+
+                        if(!slide){
+                            generateInternalSlides(talk);
+                        }
                     }
                 }
-            }
-        }
-        
-//write.out('info', urlToPrint);
-        //try{ global.phantomPage.close(); }catch(e){};
-        global.phantomPage.open(urlToPrint, function(status){
-            
-            //setTimeout(function(){
-                if(slide){
-                    var imgSrc= tmpFilesDir+ '/'+slide;
-                    if(!fs.existsSync(imgSrc)){
-                        fs.mkdirSync(imgSrc);
-                    }
-                    imgSrc+= '/'+slide;
-                    //global.editinTalk
+                if(msg.indexOf('====DONE-LOADING====') >= 0){
+                    clearTimeout(timeOutObj);
 
-                    setTimeout(function(){
-                        global.phantomPage.render(imgSrc+'.png');
-                        write.out('info', "Done generating thumbnail for '"+slide+"'");
-                        if(fn && typeof fn == 'function')
-                            fn(talk);
-                    }, 1000);
-                }else{
-                    // was the index file from a talk
-                    write.out('info', 'Talk index changed, must get talk information');
-                    write.out('info', 'and regenerate each internal slide...');
-                    global.talkSlides= false;
-                    
+                    //if(slide){
+                        render(fn);
+                    /*}else{
+                        // was the index file from a talk
+                        write.out('info', 'Talk index changed, must get talk information');
+                        write.out('info', 'and (re)generate each internal slide...');
+                        global.talkSlides= false;
+                    }*/
                 }
-                
-            //}, 1000);
+                //console.log('[ppw]', msg)
+            },
+            complete: function(){}
+        }, forcedGeneration);
+        /*global.phantomPage.open(urlToPrint, function(status){
+            
         }, function(err){
-            write.out('error', "!!!", err);
-        });
+            write.out('error', err);
+        });*/
+        timeOutObj= setTimeout(function(){ render(fn, true); forcedGeneration= true }, timeLimit+(forcedGeneration? 2000: 0));
+        forcedGeneration= false;
     }
-    
 }
 
 exports.generate= generate;

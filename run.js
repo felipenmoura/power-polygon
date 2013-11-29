@@ -9,7 +9,7 @@ var serverConf= {
 
 var thirdPartyLog= {warn:[], log:[]};
 var colors= require('cli-color');
-var write= require('./ppw/_node-modules/write.js');
+global.write= require('./ppw/_node-modules/write.js');
 
 var originalLog= console.log;
 console.log = function(){
@@ -45,39 +45,9 @@ var page = null;
 //global.phantomjs= require('phantomjs');
 
 try{
-    global.phantom=require('node-phantom');
-    // logLevel: 'silent'
-    if(!phantom.create)
-        throw new Error('no phantomjs found');
-    
-    global.phantomPage= true;
-    phantom.create(function(err,ph) {
-        if(ph && ph.createPage){
-            return ph.createPage(function(err,page) {
-                write.out('info', "Listening for changes on talks and slides");
-                page.set('viewportSize', { width: 1024, height: 768 });
-                page.set('settings.loadImages', true);
-                page.logLevel= 'silent';
-                
-                /*page.onConsoleMessage = function(msg) {
-                    //system.stderr.writeLine('console: ' + msg);
-                    //return false;
-                };*/
-                global.phantomPage= page;
-                write.out('checkpoint', '2/2 :: Starting services');
-                write.out('info', 'Talk emulator started in background');
-            });
-        }else{
-            write.out('warn', '2/2 :: Starting services');
-            write.out('info', 'phantomjs not found, no thumbnails will be');
-            write.out('info', 'generated for slides.');
-            return false;
-        }
-    });
-    //page= require('webpage');
+    require('./ppw/_node-modules/phantom.js').create({verbose: true});
 }catch(e){
     global.phantomPage= false;
-    console.log(9999999, e)
 }
 
 /* DEFINITIONS */

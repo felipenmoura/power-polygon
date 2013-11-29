@@ -478,6 +478,7 @@ window.PPW = (function ($, _d, console){
         onprev                  : [],
         onslidesloaded          : [],
         onslideloaded           : [],
+        onimagespreloaded       : [],
         ongoto                  : [],
         onresize                : [],
         onslidechange           : [],
@@ -771,34 +772,12 @@ window.PPW = (function ($, _d, console){
                              .split('/')
                              .pop();
 
-       /** 0/false: no messages
-        *   1: errors
-        *   2: errors and warnings
-        *   3: only logs
-        *   9: errors, warnings and logs
-        */
-        switch(_settings.verbose){
-            case 0:
-            case false: {
-                console.log= function(){};
-                console.warn= function(){};
-                console.error= function(){};
-                break;
-            }
-            case 1: {
-                console.log= function(){};
-                console.warn= function(){};
-                break;
-            }
-            case 2: {
-                console.log= function(){};
-                break;
-            }
-            case 3: {
-                console.warn= function(){};
-                console.error= function(){};
-                break;
-            }
+        if(_querystring('serverRequest')){
+            _conf.isServerRequest= true;
+            // preventing possible errors on slides from stopping phantomjs
+            _setVerbosityLevel(3);
+        }else{
+            _setVerbosityLevel(_settings.verbose);
         }
 
         if(_settings.mode){
@@ -810,6 +789,63 @@ window.PPW = (function ($, _d, console){
         }
         
         _triggerEvent('onload', conf);
+    };
+    
+    var _setVerbosityLevel= function(level){
+        /** 0/false: no messages
+        *   1: errors
+        *   2: errors and warnings
+        *   3: only logs
+        *   9: errors, warnings and logs
+        */
+        switch(level){
+            case 0:
+            case false: {
+                window.console.log= function(){};
+                window.console.warn= function(){};
+                window.console.error= function(){};
+                window.onerror= function(){return true;};
+                break;
+            }
+            case 1: {
+                window.console.log= function(){};
+                window.console.warn= function(){};
+                break;
+            }
+            case 2: {
+                window.console.log= function(){};
+                break;
+            }
+            case 3: {
+                window.console.warn= function(){};
+                window.console.error= function(){};
+                window.onerror= function(){return true;};
+                _addListener('onimagespreloaded', function(){
+                    
+                    var list= _d.getElementsByTagName('iframe'),
+                        l= list.length,
+                        i= 0;
+                    try{
+                        for(i=0; i<l; i++){
+                            list[i].setAttribute('onerror', 'return false');
+                            list[i].contentWindow.onerror= function(){};
+                        }
+                    }catch(e){}
+                    
+                    console.log("====DONE-LOADING====");
+                    
+                    /*function myHandler(msg, url, line){};
+                    function addErrorHandler(win, handler){
+                        win.onerror = handler;
+                        for(var i=0;i<win.frames.length;i++){
+                          addErrorHandler(win.frames[i], handler);
+                        }
+                    }
+                    addErrorHandler(window, myHandler);*/
+                });
+                break;
+            }
+        }
     };
 
     /**
@@ -1557,6 +1593,7 @@ window.PPW = (function ($, _d, console){
                 }, 500);
             }else{
                 $('#ppw-lock-loading').fadeOut();
+                _triggerEvent('onimagespreloaded');
             }
 
         }, 1000);
@@ -1653,10 +1690,6 @@ window.PPW = (function ($, _d, console){
                 _applyTalkVariables('.ppw-variable');
             });
 
-            // triggering the event to all the listeners
-            _triggerEvent('onslidesloaded', _settings.slides);
-
-            // TODO: add this to the documentation!
             if(_settings.fixAnchorScroll && _d.getElementById(_l.hash.replace('#', '')) ){
                 $(_b).one('scroll', function(){
                     // some browsers will try to scroll the page to the element
@@ -1667,10 +1700,8 @@ window.PPW = (function ($, _d, console){
                     if(_b.scrollByPages)
                         _b.scrollByPages(-100);
                     _b.style.overflow= curBodyStyle;
-                })
-
+                });
             }
-
 
             if(!_settings.useSplashScreen)
                 _startPresentation();
@@ -1695,8 +1726,10 @@ window.PPW = (function ($, _d, console){
                         this.setAttribute('target', '_blank');
                     }
                 }
-            })
+            });
 
+            // triggering the event to all the listeners
+            _triggerEvent('onslidesloaded', _settings.slides);
         }
 
         $('#ppw-slides-loader-bar-loading-container>div').stop().animate({
@@ -2802,6 +2835,7 @@ window.PPW = (function ($, _d, console){
         if(_conf.isServerRequest){
             _settings.useToolBar= false;
             _settings.useSplashScreen= false;
+            _settings.preloadImages= true;
             $b.addClass('isServerRequest');
         }else{
             _loadScript(_createPPWSrcPath('/_scripts/intro.js'), true, function(){
@@ -3680,8 +3714,11 @@ window.PPW = (function ($, _d, console){
         
         if(_conf.isServerRequest){
             window.publicServerInformation= [];
+            var coverSlide= false;
             _settings.slides.map(function(i){
-                var item= {
+                var cover= i.type == 'opening'? true: false,
+                    item= {
+                    cover: cover,
                     id: i.id,
                     type: i.type,
                     actions: i.actions,
@@ -3690,9 +3727,24 @@ window.PPW = (function ($, _d, console){
                     index: i.index,
                     internal: i.internal||false
                 };
+                if(cover)
+                    coverSlide= i.id;
                 window.publicServerInformation.push(item);
+                
                 return i;
             });
+            
+            window.publicServerInformation= {
+                title: _settings.title,
+                canonic: _settings.canonic,
+                coverSlide: coverSlide,
+                defaultLanguage: _settings.defaultLanguage,
+                profile: _settings.profile,
+                duration: _settings.duration,
+                themes: _settings.theme,
+                slides: window.publicServerInformation
+            };
+            
             console.log('====publicServerInformation====', JSON.stringify(window.publicServerInformation), '====publicServerInformation====');
         }
     };
@@ -4883,9 +4935,6 @@ window.PPW = (function ($, _d, console){
             _settings.Google= false;
             $(document.body).addClass('remote-controller');
             top.ppwFrame= _w.PPW;
-        }
-        if(_querystring('serverRequest')){
-            _conf.isServerRequest= true;
         }
 
         var isMobile= false;
