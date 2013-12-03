@@ -2459,8 +2459,10 @@ window.PPW = (function ($, _d, console){
                 return function(){
 
                     var el= _d.getElementById(slide.id),
+                        tt= null,
                         addr= _settings.fsPattern.replace(/\%id/g, slide.id);
-
+                    tt= $(el).find('h1, h2, h3, h4, h5, h6')[0];
+                    tt= tt? tt.innerHTML: el.textContent.substring(0, _conf.defaults.slideTitleSize);
                     slide.el= el;
                     slide.title= tt;
                     slide.index= i+1;

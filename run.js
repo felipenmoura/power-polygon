@@ -216,6 +216,28 @@ Services= (function(){
         });
     }
 
+    var _buildTalksData= function(arr){
+        var finalList= [];
+        arr.map(function(item){
+            var talkDataSrc= 'ppw/tmp/talks/'+item+'/';
+            var jsonSrc= talkDataSrc+item+'.json';
+            var tmp= '';
+            var o= {
+                id: item,
+            };
+            if(fs.existsSync(jsonSrc)){
+                o= JSON.parse(fs.readFileSync(jsonSrc, 'utf8'));
+                tmp= talkDataSrc+o.coverSlide+'/'+o.coverSlide+'.png';
+                if(fs.existsSync(tmp)){
+                    o.coverImage= tmp;
+                }
+                o.id= o.canonic||item;
+            }
+            finalList.push(o);
+        });
+        return finalList;
+    };
+
     var _init= function(){
 
         var url= "",
@@ -247,11 +269,11 @@ Services= (function(){
                     break;
                 }
                 case "getTalksList":{
-                        data.talks= Services.listDir('./talks/');
+                        data.talks= _buildTalksData(Services.listDir('./talks/'));
                     break;
                 }
                 case "getDemosList":{
-                        data.demos= Services.listDir('./_demos/');
+                        data.demos= _buildTalksData(Services.listDir('./_demos/'));
                     break;
                 }
                 case "logoff":{

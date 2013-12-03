@@ -27,12 +27,13 @@ $(document).ready(function(){
         }, 'json');
     };
 
-    var buildListElement= function(name, demo){
+    var buildListElement= function(data, demo){
 
-        var oName= name;
-            name= demo? '_demos/'+name: 'talks/'+name;
+        var oName= data.title || data.id;
+            name= demo? '_demos/'+data.id: 'talks/'+data.id;
 
-        var str= "<li>"+oName+"\
+        var bg= (data.coverImage)? 'background-image: url('+data.coverImage+')': '';
+        var str= "<li><div title='"+oName+"' alt='"+oName+"' class='talkDecoration' style='"+bg+"'><span>"+((data.coverImage)? '': oName)+"</span></div>\
                       <div class='talk-butons'>\
                          <a href='"+name+"/' title='Open presentation'></a>\
                          <a href='ppw/_tools/remote/full/index.html?p="+name+"/' title='Full remote control'></a>\

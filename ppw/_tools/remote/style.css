@@ -65,7 +65,10 @@ body.loaded .body-container{
     margin-top: 4px;
 }
 .talk-list li{
-    height: 38px;
+    /*height: 38px;*/
+    float: left;
+    min-width: 380px;
+    width: 30%;
     cursor: default;
     padding: 9px;
     position: relative;
@@ -76,6 +79,8 @@ body.loaded .body-container{
     white-space: nowrap;
     padding-right: 150px;
     border-top: dotted 1px #e0e0e0;
+    outline: solid 1px #444;
+    margin: 1%;
 }
 .talk-list li:hover{
     background-color: #b6cfde;
@@ -163,4 +168,18 @@ body.loaded .body-container{
     margin: 0px 10px 0px 10px;
     color: #444;
     text-decoration: none;
+}
+
+.talkDecoration{
+    outline: solid 1px white;
+    position: relative;
+    width: 320px;
+    height: 240px;
+    background-size: cover;
+    background-image: url(/ppw/_images/power-polygon-logo.jpg);
+}
+.talkDecoration span{
+    position: absolute;
+    left: 4px;
+    bottom: 4px;
 }
