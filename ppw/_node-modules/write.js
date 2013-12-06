@@ -9,22 +9,25 @@ var colors= require('cli-color');
 // this method outputs messages and data in Power Polygon Service's format
 var write= function(type){
     if(type == 'error'){
-        type= 'red'
+        type= 'red';
         typeLabel= " [PPW]::Error   | ";
     }else if(type == 'warn' || type == "warning"){
-        type= 'yellow'
+        type= 'yellow';
         typeLabel= " [PPW]::Warning | ";
     }else if(type == 'checkpoint' || type == 'green'){
-        type= 'green'
+        type= 'green';
         typeLabel= " [PPW]::OK      | ";
+    }else if(type == 'question' || type == 'blue'){
+        type= 'blue';
+        typeLabel= " [PPW]::Question| ";
     }else if(type == 'step'){
-        type= 'white'
+        type= 'white';
         typeLabel= "                - ";
     }else if(type == 'line'){
         console.log('[ppw]', " --------------------------------------------------------------------------");
         return;
     }else{
-        type= 'white'
+        type= 'white';
         typeLabel= "      ::        - ";
     }
 

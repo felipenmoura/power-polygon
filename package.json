@@ -34,7 +34,8 @@
     "sqlite3": "~2.1.19",
     "chokidar": "~0.7.1",
     "cli-color": "~0.2.3",
-    "jade": "*"
+    "jade": "*",
+    "passport": "~0.1.17"
   },
   "bugs": {
     "url": "https://github.com/braziljs/power-polygon/issues?state=open"

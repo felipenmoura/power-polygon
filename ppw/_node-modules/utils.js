@@ -1,3 +1,8 @@
+/*============================================================================*/
+// Power Polygon Service: utils
+// This module offers a bunch of useful tools and features to be accessed
+// globally by other modules.
+/*============================================================================*/
 
 var path= require('path'),
     root= path.resolve('./')+'/',
@@ -7,10 +12,14 @@ global.path= path;
 global.root= root;
 
 module.exports = {
-	require: function(what, data){
-		var ret= require(root+'ppw/_node-modules/'+what+'.js');
-		if(typeof ret == 'function' && data){
-			return ret(data);
+	require: function(what){
+        var ar= Array.prototype.slice.call(arguments, 1);
+        //ar.unshift(root+'ppw/_node-modules/'+what+'.js');
+
+        var ret= require(root+'ppw/_node-modules/'+what+'.js');
+		//var ret= require(root+'ppw/_node-modules/'+what+'.js');
+		if(typeof ret == 'function' && ar.length > 0){
+			return ret.apply(this, ar);
 		}
 		return ret;
 	},

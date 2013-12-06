@@ -1,3 +1,9 @@
+/*============================================================================*/
+// Power Polygon Service: server
+// This module is responsible for the app/server behaviours
+/*============================================================================*/
+
+
 var serverData= null;
 //var passport= require('passport');
 

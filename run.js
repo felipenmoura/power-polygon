@@ -18,8 +18,8 @@ var utils= require('./ppw/_node-modules/utils.js');
 global.utils= utils;
 
 // managim console features and outputs
-var write= require(root+'ppw/_node-modules/write.js');
-var console= require(root+'ppw/_node-modules/console.js');
+var write= utils.require('write');
+var console= utils.require('console');
 
 // writing console header(once the app is starting in console)
 write.writeHead();
@@ -32,6 +32,10 @@ var router= utils.require('routes');
 router(app);
 app.start();
 write.serverStarted(global.server||false, serverConf);
+
+var db= utils.require('dbm', serverConf, function(){
+    write.out('warning', 'DB DONE');
+});
 
 
 

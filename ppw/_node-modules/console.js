@@ -19,6 +19,13 @@ console.log = function(){
     }
 };
 
+process.on('uncaughtException', function(err, extra) {
+    // handle the error safely
+    write.out('error', err.message);
+    if(extra)
+        write.out('info', extra);
+});
+
 console.warning= console.warn= function(){
 
     if(arguments[0] == '[ppw]'){

@@ -1,3 +1,7 @@
+/*============================================================================*/
+// Power Polygon Service: routes
+// This module manages the routes power polygon services are goint to use
+/*============================================================================*/
 
 
 module.exports = function(app, passport){
