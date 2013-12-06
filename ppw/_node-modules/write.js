@@ -1,3 +1,7 @@
+/*============================================================================*/
+// Power Polygon Service: write
+// This module writes/outputs messages and data to the console
+/*============================================================================*/
 
 // module that helps us to use colors on console
 var colors= require('cli-color');

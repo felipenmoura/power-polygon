@@ -67,6 +67,39 @@ return;
 //
 
 
+var thirdPartyLog= {warn:[], log:[]};
+var colors= require('cli-color');
+global.write= require('./ppw/_node-modules/write.js');
+
+var originalLog= console.log;
+console.log = function(){
+    if(arguments[0] == '[ppw]'){
+        var ar= Array.prototype.slice.call(arguments, 1);
+        originalLog.apply(this, ar);
+    }else{
+        //thirdPartyLog.log.push(arguments);
+    }
+};
+
+console.warning= console.warn= function(){
+    if(arguments[0] == '[ppw]'){
+        var ar= Array.prototype.slice.call(arguments, 1);
+        originalLog.apply(this, ar);
+    }else{
+        thirdPartyLog.warn.push(arguments);
+    }
+    if(thirdPartyLog.warn.length > 100){
+        write.out('warning', 'There are '+thirdPartyLog.warn.length+" warning messages from third party modules!");
+        rl.question("Would you like to see them all?\nType YES to show the messages and clean the list or NO to just clean the list\n > ",
+                    function(answer){
+                        if(answer.toLowerCase() == 'yes'){
+                            console.log('[ppw]', thirdPartyLog.warn);
+                        }
+                        thirdPartyLog.warn= [];
+                    });
+    }
+};
+
 
 var page = null;
 
@@ -77,8 +110,6 @@ try{
 }catch(e){
     global.phantomPage= false;
 }
-
-
 
 /* DEFINITIONS */
 var express = require('express')
