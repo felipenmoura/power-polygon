@@ -14,15 +14,18 @@ var databaseManager= 'sqlite3' // currently supporting sqlite
   , write= utils.require('write')
   , queries= utils.require('resources/dml.'+databaseManager);
 
-module.exports= function(serverConf, fn){
+module.exports= function(serverConfig, fn){
 
-	var _token= false;
+	var _token= false,
+		_this= this,
+		serverConf= serverConfig;
 
 	var _init= function(){
 		if(!dbExists(serverConf)){
 			createDB();
 		}else{
-			ready();
+			queries.connect(serverConf);
+			ready(_this);
 		}
 	};
 
@@ -30,7 +33,7 @@ module.exports= function(serverConf, fn){
 		return queries.dbExists(serverConf);
 	};
 
-	var getToken= function(){
+	var getToken= function(fn){
 		rl.question("> ",
 	                function(answer){
 	                    if(answer.length<3){
@@ -38,9 +41,9 @@ module.exports= function(serverConf, fn){
 	                        getToken(fn, true);
 	                        return;
 	                    }else{
-	                        write.out('checkpoint', "Your token was set!\n      You will use it to activate locked features.\n");
 	                        _token= answer;
-	                        createDB();
+	                        if(fn && typeof fn == 'function')
+	                        	fn(_token);
 	                    }
 	                });
 	};
@@ -49,12 +52,13 @@ module.exports= function(serverConf, fn){
 		if(!_token){
 			write.out('question', 'It looks like it is your first time here!');
 			write.out('info', 'Please, define a secret token to identify the ADMIN user:');
-			getToken();
+			getToken(createDB);
 		}else{
 			try{
 				queries.connect(serverConf);
 				queries.createDB(serverConf, _token, function(){
-		                        	ready();
+	                        		write.out('checkpoint', "Your token was set!\n      You will use it to activate locked features.\n");
+		                        	ready(_this);
 		                         });
 			}catch(e){
 				write.out('error', 'Failed creating the database!');
@@ -62,6 +66,14 @@ module.exports= function(serverConf, fn){
 			}
 		}
 
+	};
+
+	this.renewToken= function(){
+		write.out('question', 'Please, type the new token for admin');
+		getToken(function(token){
+					queries.renewToken(token);
+					write.out('checkpoint', "Your new token was set");
+			    });
 	};
 
 	var ready= (typeof fn == 'function')? fn: function(){};

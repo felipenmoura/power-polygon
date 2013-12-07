@@ -4,6 +4,7 @@
 /*============================================================================*/
 var sqlite3 = require('sqlite3').verbose()
   , fs = require('fs')
+  , serverConf= null
   , db = null // ':memory:'
 
 module.exports= {
@@ -14,7 +15,8 @@ module.exports= {
 	    }catch(e){}
 	    return stats? true: false;
 	},
-	connect: function(serverConf){
+	connect: function(serverConfig){
+		serverConf= serverConfig;
 		db= new sqlite3.Database(serverConf.dbsrc);
 	},
 	createDB: function(serverConf, _token, fn){
@@ -43,6 +45,11 @@ module.exports= {
             }
 
         });
+	},
+	renewToken: function(token){
+		var stmt = db.prepare("UPDATE userdata SET usertoken=? where username=?");
+		            stmt.run(token, serverConf.defaultuser);
+		            stmt.finalize();
 	}
 };
 

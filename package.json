@@ -35,7 +35,8 @@
     "chokidar": "~0.7.1",
     "cli-color": "~0.2.3",
     "jade": "*",
-    "passport": "~0.1.17"
+    "passport": "~0.1.17",
+    "keypress": "~0.2.1"
   },
   "bugs": {
     "url": "https://github.com/braziljs/power-polygon/issues?state=open"

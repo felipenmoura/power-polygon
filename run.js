@@ -33,10 +33,23 @@ router(app);
 app.start();
 write.serverStarted(global.server||false, serverConf);
 
-var db= utils.require('dbm', serverConf, function(){
-    write.out('warning', 'DB DONE');
+// verifying if the database exists. If not, creates it(asking for the token)
+var db= utils.require('dbm', serverConf, function(db){
+    if(process.argv.indexOf('renew') >= 0 ){
+        db.renewToken();
+    }
 });
 
+// listening for the Q key press to quit
+var keypress = require('keypress');
+keypress(process.stdin);
+process.stdin.on('keypress', function (ch, key) {
+    if(key.name == 'q'){
+        write.out(false, 'key pressed. Quiting...\n Thanks for using Power Polygon.');
+        write.out('line');
+        process.exit();
+    }
+});
 
 
 

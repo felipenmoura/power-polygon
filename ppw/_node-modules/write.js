@@ -26,6 +26,9 @@ var write= function(type){
     }else if(type == 'line'){
         console.log('[ppw]', " --------------------------------------------------------------------------");
         return;
+    }else if(type == false){
+        type= 'white';
+        typeLabel= " ";
     }else{
         type= 'white';
         typeLabel= "      ::        - ";
@@ -51,12 +54,15 @@ exports.writeHead= function(){
         console.log('[ppw]', ' Please report any issue at ', colors.yellow.underline("http://github.com/braziljs/power-polygon/"));
         console.log('[ppw]', ' Check the licenses at ppw/_licenses');
         write('line');
+        write('checkpoint', 'Starting services (0/2)');
+        write('info', 'Press Q key by any time, to quit');
 };
 
 // server started, or did it?
 exports.serverStarted= function(status, serverConf){
     if(status){
-        write('checkpoint', 'HTTP server listening on port '+ colors.yellow(serverConf.port));
+        write('checkpoint', '(1/2) Service started: HTTP server');
+        write('info', 'HTTP server listening on port '+ colors.yellow(serverConf.port));
         write('info', 'Access your HTTP server in your browser like this:');
         write('info', '   '+colors.underline('http://yourIP:'+serverConf.port+ '/'));
     }else{
