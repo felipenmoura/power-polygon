@@ -16,6 +16,7 @@ node_modules
 ppw/_themes/thm-felipenmoura
 ppw/_themes/trans-page-felipenmoura
 /report/*
+package.sublime-workspace
 
 ##
 ## Internal use

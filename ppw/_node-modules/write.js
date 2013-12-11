@@ -55,18 +55,23 @@ exports.writeHead= function(){
         console.log('[ppw]', ' Please report any issue at ', colors.yellow.underline("http://github.com/braziljs/power-polygon/"));
         console.log('[ppw]', ' Check the licenses at ppw/_licenses');
         write('line');
-        write('checkpoint', 'Starting services (0/2)');
+        write('checkpoint', 'Starting services (0/3)');
         write('info', 'Press Q key by any time, to quit');
 };
 
 // server started, or did it?
 exports.serverStarted= function(status, serverConf){
     if(status){
-        write('checkpoint', '(1/2) Service started: HTTP server');
+        write('checkpoint', '(1/3) Service started: HTTP server');
         write('info', 'HTTP server listening on port '+ colors.yellow(serverConf.port));
         write('info', 'Access your HTTP server in your browser like this:');
         write('info', '   '+colors.underline('http://yourIP:'+serverConf.port+ '/'));
     }else{
         write('warning', "It was not possible to start the server at port "+serverConf.port+"!\nPlease verify if you have permission to do so.\n");
     }
+}
+
+// sockets listeners started
+exports.startingSockets= function(){
+    write('checkpoint', '(2/3) Starting sockets interface');
 }

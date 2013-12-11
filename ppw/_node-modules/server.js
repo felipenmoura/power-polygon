@@ -43,9 +43,9 @@ module.exports= function(data){
 	});
 
   	app.start= function(){
-  		app.listen(serverData.port);
+  		return app.listen(serverData.port);
   	}
 
-	global.server= app;
+	//global.server= app;
 	return app;
 };

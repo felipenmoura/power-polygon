@@ -4,14 +4,7 @@
 /*============================================================================*/
 
 // SERVER DEFAULT SETTINGS
-var serverConf= {
-    usedefaultuser: true,
-    defaultuser: 'admin',
-    uploadDir: '/ppw/tmp/',
-    dbsrc: '.sqldb',
-    port: 8081,
-    serverSecret: 'onlyMeAndGitHubUsersKnowIt! - Please,change this for your use'
-}
+var serverConf= require('./settings.js');
 
 // useful features and tools
 var utils= require('./ppw/_node-modules/utils.js');
@@ -28,10 +21,15 @@ write.writeHead();
 var app= utils.require('server', serverConf);
 
 // managing routes
-var router= utils.require('routes');
-router(app);
-app.start();
-write.serverStarted(global.server||false, serverConf);
+var router= utils.require('routes')(app);
+var server= app.start();
+write.serverStarted(server||false, serverConf);
+
+// caching the api for further use
+var api= utils.require('api');
+
+var io= utils.require('sockets');
+io.start(server);
 
 // verifying if the database exists. If not, creates it(asking for the token)
 var db= utils.require('dbm', serverConf, function(db){
@@ -42,13 +40,13 @@ var db= utils.require('dbm', serverConf, function(db){
     }
 });
 
-// caching the api for further use
-var api= utils.require('api');
-
 // depends on DB validation
 function next(){
 
+    teardown();
+};
 
+function teardown(){
     // listening for the Q key press to quit
     var keypress = require('keypress');
     keypress(process.stdin);
@@ -59,13 +57,9 @@ function next(){
             process.exit();
         }
     });
-
-
-
-};
+}
 
 // TODO: API services(list talks, etc)
-// TODO: start sockets for remote controll
 // TODO: start phantom watcher
 
 
