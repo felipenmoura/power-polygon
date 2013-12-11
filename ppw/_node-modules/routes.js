@@ -11,8 +11,12 @@ module.exports = function(app, passport){
         viewsDir= 'ppw/_views/';
 
     app.get('/', function(req, res){
-        url= viewsDir+'';
-        deliver(url, req, res);
+        url= viewsDir+'index.html';
+        api= utils.require('api');
+        deliver(url, req, res, function(str){
+            str= str.toString().replace('<!--#include loggin -->', api.drawLoginButtons());
+            return str;
+        });
     });
 
     app.get('/run.js', function(req, res){
@@ -21,16 +25,38 @@ module.exports = function(app, passport){
     });
 
     // API - get
+    app.get('/api', function(req, res){
+        var url= viewsDir+'api-help.html';
+        api= utils.require('api');
+
+        data= api.list();
+
+        res.setHeader('Content-Type', 'application/json; charset=utf-8');
+        //res.writeHead(200);
+        res.end(JSON.stringify(data));
+    });
+
     app.get('/api/:command', function(req, res){
 
-        var data= {
-            demos: [],
-            talks: [],
-            errors: [],
-            auth: utils.isLogged(req)
+        var api= utils.require('api'),
+            list = api.list(),
+            command= req.params.command,
+            data= false;
+
+        if(command in list){
+            data= api[command](req.params);
+        }else{
+            data= {error: 'command '+command+ ' does not exist in the API'};
         }
 
-        res.setHeader('Content-Type', 'text/json; charset=utf-8');
+        /*var data= {
+                demos: [],
+                talks: [],
+                errors: [],
+                auth: utils.isLogged(req)
+            },
+            api= utils.require('api');
+
         switch(req.params.command){
             case "verifylogin":{
                     // will just return the data object as it is
@@ -53,7 +79,7 @@ module.exports = function(app, passport){
                 //
                 break;
             }
-        }
+        }*/
         res.end(JSON.stringify(data));
     });
 

@@ -36,22 +36,37 @@ write.serverStarted(global.server||false, serverConf);
 // verifying if the database exists. If not, creates it(asking for the token)
 var db= utils.require('dbm', serverConf, function(db){
     if(process.argv.indexOf('renew') >= 0 ){
-        db.renewToken();
+        db.renewToken(next);
+    }else{
+        next();
     }
 });
 
-// listening for the Q key press to quit
-var keypress = require('keypress');
-keypress(process.stdin);
-process.stdin.on('keypress', function (ch, key) {
-    if(key.name == 'q'){
-        write.out(false, 'key pressed. Quiting...\n Thanks for using Power Polygon.');
-        write.out('line');
-        process.exit();
-    }
-});
+// caching the api for further use
+var api= utils.require('api');
+
+// depends on DB validation
+function next(){
 
 
+    // listening for the Q key press to quit
+    var keypress = require('keypress');
+    keypress(process.stdin);
+    process.stdin.on('keypress', function (ch, key) {
+        if(key.name == 'q'){
+            write.out(false, 'key pressed. Quiting...\n Thanks for using Power Polygon.');
+            write.out('line');
+            process.exit();
+        }
+    });
+
+
+
+};
+
+// TODO: API services(list talks, etc)
+// TODO: start sockets for remote controll
+// TODO: start phantom watcher
 
 
 

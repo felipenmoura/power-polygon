@@ -68,11 +68,13 @@ module.exports= function(serverConfig, fn){
 
 	};
 
-	this.renewToken= function(){
+	this.renewToken= function(fn){
 		write.out('question', 'Please, type the new token for admin');
 		getToken(function(token){
 					queries.renewToken(token);
 					write.out('checkpoint', "Your new token was set");
+					if(typeof fn == 'function')
+						fn();
 			    });
 	};
 

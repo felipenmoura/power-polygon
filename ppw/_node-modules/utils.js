@@ -39,7 +39,7 @@ module.exports = {
         return list;
     },
 
-	deliver: function(url, req, res){
+	deliver: function(url, req, res, apply){
 
         url= url.replace(/(\/\..*)|(\?.*)|(\#.*)/ig, '');
 
@@ -79,7 +79,10 @@ module.exports = {
 
             // fixing a bug in nodejs, for empty files(explodes the gzip module!)
             if(!data || !data.length)
-                data= "// Empty file!";
+                data= '{ "error": "Empty file!" }';
+
+            if(typeof apply == 'function')
+                data= apply(data);
 
             res.end(data);
 

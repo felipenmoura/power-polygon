@@ -36,6 +36,7 @@
     "cli-color": "~0.2.3",
     "jade": "*",
     "passport": "~0.1.17",
+    "passport-http": "~0.2.2",
     "keypress": "~0.2.1"
   },
   "bugs": {

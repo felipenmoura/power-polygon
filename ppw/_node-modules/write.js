@@ -47,6 +47,7 @@ exports.out= write;
 // useful shortcuts for longer messages
 // header
 exports.writeHead= function(){
+
         console.log('[ppw]', "+==========================================================================+");
         console.log('[ppw]', "|                             Power Polygon Web                            |");
         console.log('[ppw]', "+==========================================================================+");
