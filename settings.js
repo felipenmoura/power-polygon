@@ -36,5 +36,7 @@ module.exports= {
     // in case you set up phantomInstances to more than three(3) and it's using the all
     // the instances but one(for example, 9 out of 10 instances, or 3 out of 4), new
     // instances will be automatically started
-    phantomInstancesIncrement: true
+    phantomInstancesIncrement: true,
+    // the limit number of instances, in case increment is allowed
+    phantomInstancesLimit: 10
 };

@@ -47,11 +47,14 @@ var db= utils.require('dbm', serverConf, function(db){
 function startPhantomManager(){
     if(pIM){
         // starts the manager
+        write.startedPhantom(serverConf.phantomInstances);
         pIM.setUp(serverConf.phantomInstances,
                   serverConf.phantomInstancesIncrement)
            .init(function(status, instances){
-                write.startedPhantom(instances);
+                write.out('info', 'Done starting emulators');
                 teardown();
+           }, function(x, outof){
+                write.out('step', 'Emulator instance started('+x+'/'+outof+')')
            })
            .error(function(err){
                 write.out('warning', 'Failed to instantiate PhantomJS on manager!');
@@ -64,14 +67,30 @@ function startPhantomManager(){
 
 function teardown(){
     // listening for the Q key press to quit
+    write.out('info', 'Press Q key by any time, to quit');
     var keypress = require('keypress');
     keypress(process.stdin);
     process.stdin.on('keypress', function (ch, key) {
         if(key.name == 'q'){
-            write.out(false, 'key pressed. Quiting...\n Thanks for using Power Polygon.');
-            write.out('line');
-            process.exit();
+            write.out(false, 'key pressed. Quiting...');
+            exiting();
         }
+    });
+    // listening for ctrl+c sign
+    process.on('SIGINT', function() {
+        write.out(false, '');
+        exiting();
+    });
+}
+
+// closing the processes and cleaning the mess
+function exiting(){
+    write.out('step', 'Closing emulators');
+    pIM.killInstances(function(){
+        write.out('step', 'Finishing server');
+        write.out('info', 'Thanks for using Power Polygon.');
+        write.out('line');
+        process.exit(0);
     });
 }
 

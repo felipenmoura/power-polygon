@@ -9,15 +9,45 @@ var utils= global.utils,
 
 var numberOfInstances= 1;
 var incrementable= false;
+var incrementLimit= 10;
 var _error= [];
 var _instances= [];
 var _phantom= require('node-phantom');
+var _waitingList= [];
 
-var _freeInstance= function(){
+function PHInstance(ph){
 
+	this.idle= false;
+	this.t= (new Date()).getTime();
+	this.ph= ph;
+
+	this.setIdle= function(idle){
+		this.idle= idle;
+		this.t= (new Date()).getTime();
+	};
+
+	return this;
 };
 
-var _createInstances= function(l, fn){
+// adds a method to a waiting list
+var _addToWaitingList= function(fn){
+	if(utils.isFn(fn))
+		_waitingList.push(fn);
+};
+
+// is waiting for a free instance of phantom
+var _waitingForIdleInstance= function(){
+	var inst= _getFreeInstance(false);
+	var item= null;
+	if(inst){
+		item= _waitingList.shift();
+		if(utils.isFn(item))
+			item(inst);
+	}
+};
+
+// creates a given number of instances of phantomjs
+var _createInstances= function(l, fn, step){
 	l--;
 	if(l<0) l== 0;
 	_phantom.create(function(err, ph){
@@ -25,34 +55,71 @@ var _createInstances= function(l, fn){
 			_triggerErrors(err, 'Could not initialize Phantomjs!');
 			return false;
 		}
-		_instances.push({
-			ph: ph,
-			status: 'idle'
-		});
+		_instances.push(new PHInstance(ph));
+
+		if(numberOfInstances > 1 && typeof step == 'function'){
+			step(_instances.length, numberOfInstances);
+		}
+
 		if(l){
-			_createInstances(l, fn);
+			if(_instances.length <= incrementLimit){
+				_createInstances(l, fn, step);
+			}else{
+				// if there is no free instance and cannot create any extra one
+				_addToWaitingList(fn);
+			}
 		}else{
-			if(typeof fn == 'function')
-				fn(true, _instances.length);
+			if(typeof fn == 'function'){
+				fn(true, _instances.length, _instances[_instances.length-1]);
+			}
 		}
 	});
 };
 
+// in case of errors in any instance, this method is triggered.
 var _triggerErrors= function(err, extra){
 	var l= _error.length;
 	for(i=0; i<l; i++){
 		try{
-			error(err, extra);
+			_error[i](err, extra);
 		}catch(e){
 			console.error('Failed executing callback for errors on phantomjs manager!', e, err);
 		}
 	}
 };
 
+// gets the next free instance, seting it as idle
+// in case there isn't any, if increment is allowed
+// it creates a new instance, otherwise, adds the
+// given function to the waiting list.
+var _getFreeInstance= function(fn){
+	var l= _instances.length;
+	for(i=0; i<l; i++){
+		ph= _instances[i];
+		if(ph.idle){
+			ph.idle= false;
+			if(typeof fn == 'function')
+				fn(ph);
+			return ph;
+		}
+	}
+
+	if(utils.isFn(fn)){
+		_createInstances(1, function(status, len, instance){
+			instance.idle= false;
+			fn(instance);
+		});
+	}else{
+		return false;
+	}
+}
+
 module.exports= {
 
-	add: function(url, fn){
+	load: function(url, fn){
+		var inst= _getFreeInstance(function(instance){
 
+		});
 	},
 	getInstances: function(){
 		return _instances;
@@ -62,14 +129,34 @@ module.exports= {
 			_error.push(fn);
 		}
 	},
-	setUp: function(len, inc){
+	killInstances: function(fn){
+
+		var l= _instances.length, ph= null;
+		for(i=0; i<l; i++){
+			try{
+				ph= _instances[i].ph;
+				ph.exit();
+				ph._phantom.kill('SIGTERM');
+			}catch(e){
+				console.error('Failed killing instances of phantomjs!', e);
+			}
+		}
+
+		if(typeof fn == 'function'){
+			fn();
+		}
+	},
+	setUp: function(len, inc, incLim){
 		numberOfInstances= (len && !isNaN(len))?
 								len:
 								numberOfInstances;
 		incrementable= inc? true: false;
+		incrementLimit= (incLim && !isNaN(incLim))?
+								incLim:
+								incrementLimit;
 		return this;
 	},
-	init: function(fn){
+	init: function(fn, step){
 
 		var status= true;
 
@@ -77,7 +164,20 @@ module.exports= {
 			_triggerErrors('Not PhantomJS found!');
 			return false;
 		}
-		_createInstances(numberOfInstances, fn);
+
+
+		var options = {
+			encoding: 'utf8',
+			timeout: 7000,
+			maxBuffer: 200*1024,
+			killSignal: 'SIGTERM',
+			cwd: null,
+			env: null
+		}
+
+		//child_process.exec('phantomjs rasterize.js www.google.com 1.png', options, fn);
+		_createInstances(numberOfInstances, fn, step);
+		setInterval(_waitingForIdleInstance, 1000);
 
 		return this;
 	}

@@ -55,8 +55,7 @@ exports.writeHead= function(){
         console.log('[ppw]', ' Please report any issue at ', colors.yellow.underline("http://github.com/braziljs/power-polygon/"));
         console.log('[ppw]', ' Check the licenses at ppw/_licenses');
         write('line');
-        write('checkpoint', 'Starting services (0/3)');
-        write('info', 'Press Q key by any time, to quit');
+        write('info', 'Starting services (0/3)');
 };
 
 // server started, or did it?
@@ -79,7 +78,7 @@ exports.startingSockets= function(){
 // phantomJSInstancesManager was started
 exports.startedPhantom= function(instances){
     if(instances){
-        write('checkpoint', '(3/3) Talk emulator and queues set up'+(instances>1? ' ('+instances+' instances)': ''));
+        write('checkpoint', '(3/3) Setting up talk emulators '+(instances>1? ' ('+instances+' instances)': ''));
         write('info', 'These emulators can keep screenshots of your slides');
         write('info', 'and data about your talks up to date and well cached.');
     }else{

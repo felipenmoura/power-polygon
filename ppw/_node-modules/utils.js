@@ -88,6 +88,9 @@ module.exports = {
 
         });
     },
+    isFn: function(fn){
+        return typeof fn == 'function'? true: false;
+    },
     isLogged: function(){
     	return true;
     }
