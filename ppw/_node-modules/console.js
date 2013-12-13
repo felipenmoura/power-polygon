@@ -54,7 +54,7 @@ console.warning= console.warn= function(){
         var ar= Array.prototype.slice.call(arguments, 0);
         thirdPartyLog.warn.push('- '+ar.join('\n- '));
     }
-    
+
     // cached X warnings, should flush it into a file and clear
     // the list from memory
     if(thirdPartyLog.warn.length > warnLength){

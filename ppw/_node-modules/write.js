@@ -69,9 +69,30 @@ exports.serverStarted= function(status, serverConf){
     }else{
         write('warning', "It was not possible to start the server at port "+serverConf.port+"!\nPlease verify if you have permission to do so.\n");
     }
-}
+};
 
 // sockets listeners started
 exports.startingSockets= function(){
     write('checkpoint', '(2/3) Starting sockets interface');
-}
+};
+
+// phantomJSInstancesManager was started
+exports.startedPhantom= function(instances){
+    if(instances){
+        write('checkpoint', '(3/3) Talk emulator and queues set up'+(instances>1? ' ('+instances+' instances)': ''));
+        write('info', 'These emulators can keep screenshots of your slides');
+        write('info', 'and data about your talks up to date and well cached.');
+    }else{
+        write('warning', '(3/3) PhantomJS was not found and is a requirement!');
+        write('info', 'PhantomJS is a third party software that is a requirement');
+        write('info', 'for the emulators to work.');
+        write('info', 'But don\'t worry, besides a few features, everything else will');
+        write('info', 'work. Please attempt to install PhantomJS in order to be able');
+        write('info', 'to use extra/advanced features of Power Polygon');
+    }
+};
+
+
+
+
+

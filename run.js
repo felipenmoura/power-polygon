@@ -31,19 +31,35 @@ var api= utils.require('api');
 var io= utils.require('sockets');
 io.start(server);
 
+// preparing phantomInstancesManager
+var pIM= utils.require('phantomInstancesManager');
+
 // verifying if the database exists. If not, creates it(asking for the token)
 var db= utils.require('dbm', serverConf, function(db){
     if(process.argv.indexOf('renew') >= 0 ){
-        db.renewToken(next);
+        db.renewToken(startPhantomManager);
     }else{
-        next();
+        startPhantomManager();
     }
 });
 
 // depends on DB validation
-function next(){
+function startPhantomManager(){
+    if(pIM){
+        // starts the manager
+        pIM.setUp(serverConf.phantomInstances,
+                  serverConf.phantomInstancesIncrement)
+           .init(function(status, instances){
+                write.startedPhantom(instances);
+                teardown();
+           })
+           .error(function(err){
+                write.out('warning', 'Failed to instantiate PhantomJS on manager!');
+           });
+    }
 
-    teardown();
+    //pIM.add(url, fn);
+    //pIM.add(url, fn);
 };
 
 function teardown(){
@@ -59,6 +75,8 @@ function teardown(){
     });
 }
 
+
+// TODO: login
 // TODO: API services(list talks, etc)
 // TODO: start phantom watcher
 
@@ -71,6 +89,12 @@ function teardown(){
 
 return;
 //process.exit();
+
+
+
+
+
+
 
 
 

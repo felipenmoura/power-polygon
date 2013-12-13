@@ -1,5 +1,17 @@
+/*============================================================================*/
+// Power Polygon module: Phantom Instances Manager
+// This manager takes care of a number of instances of phantomJS.
+// Also, it manages the requisitions queue for the given instances.
+/*============================================================================*/
+
+var utils= global.utils,
+    write= utils.require('write');
+
 global.phantom= require('node-phantom');
-var write= global.write;
+
+
+return;
+
 
 if(!phantom.create)
     throw new Error('no phantomjs found');
@@ -10,15 +22,15 @@ var create= function(o){
     //try{
       //  global.phantomPage.close();
     //}catch(e){};
-    
+
     global.phantom.create(function(err, ph) {
-        
+
         if(ph && ph.createPage){
             return ph.createPage(function(err,page) {
-                
+
                 if(o.verbose)
                     write.out('info', "Listening for changes on talks and slides");
-                
+
                 page.set('viewportSize', { width: 1024, height: 768 });
                 page.set('settings.loadImages', true);
 
@@ -27,7 +39,7 @@ var create= function(o){
                     write.out('checkpoint', '2/2 :: Starting services');
                     write.out('info', 'Talk emulator started in background');
                 }
-                
+
                 if(o.oncreate && typeof o.oncreate == 'function'){
                     o.oncreate();
                 }
