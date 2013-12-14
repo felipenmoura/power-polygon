@@ -10,19 +10,19 @@ var colors= require('cli-color');
 var write= function(type){
     if(type == 'error'){
         type= 'red';
-        typeLabel= " [PPW]::Error   | ";
+        typeLabel= " [FAIL]::    | ";
     }else if(type == 'warn' || type == "warning"){
         type= 'yellow';
-        typeLabel= " [PPW]::Warning | ";
+        typeLabel= " [WARN]::    | ";
     }else if(type == 'checkpoint' || type == 'green'){
         type= 'green';
-        typeLabel= " [PPW]::OK      | ";
+        typeLabel= " [ OK ]::    | ";
     }else if(type == 'question' || type == 'blue'){
         type= 'blue';
-        typeLabel= " [PPW]::Question| ";
+        typeLabel= " [PRMT]::    | ";
     }else if(type == 'step'){
         type= 'white';
-        typeLabel= "                - ";
+        typeLabel= "             - ";
     }else if(type == 'line'){
         console.log('[ppw]', " --------------------------------------------------------------------------");
         return;
@@ -31,7 +31,7 @@ var write= function(type){
         typeLabel= " ";
     }else{
         type= 'white';
-        typeLabel= "      ::        - ";
+        typeLabel= "       ::    - ";
     }
 
     var ar= Array.prototype.slice.call(arguments, 1);

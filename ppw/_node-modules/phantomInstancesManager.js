@@ -17,9 +17,18 @@ var _waitingList= [];
 
 function PHInstance(ph){
 
+	var _this= this;
 	this.idle= false;
+	this.ready= false;
 	this.t= (new Date()).getTime();
 	this.ph= ph;
+	this.ph.createPage(function(err, page){
+		page.set('viewportSize', { width: 1024, height: 768 });
+        page.set('settings.loadImages', true);
+        _this.page= page;
+        _this.ready= true;
+	});
+	this.page= null;
 
 	this.setIdle= function(idle){
 		this.idle= idle;
@@ -40,6 +49,7 @@ var _waitingForIdleInstance= function(){
 	var inst= _getFreeInstance(false);
 	var item= null;
 	if(inst){
+		// if there is any function waiting for a free instance
 		item= _waitingList.shift();
 		if(utils.isFn(item))
 			item(inst);
@@ -69,6 +79,7 @@ var _createInstances= function(l, fn, step){
 				_addToWaitingList(fn);
 			}
 		}else{
+			// created all the instances
 			if(typeof fn == 'function'){
 				fn(true, _instances.length, _instances[_instances.length-1]);
 			}
@@ -94,6 +105,7 @@ var _triggerErrors= function(err, extra){
 // given function to the waiting list.
 var _getFreeInstance= function(fn){
 	var l= _instances.length;
+	// looks for an existing free instance
 	for(i=0; i<l; i++){
 		ph= _instances[i];
 		if(ph.idle){
@@ -104,6 +116,8 @@ var _getFreeInstance= function(fn){
 		}
 	}
 
+	// if no free instance was fount, try to create a new one.
+	// but only if received a callback, otherwise, just return false.
 	if(utils.isFn(fn)){
 		_createInstances(1, function(status, len, instance){
 			instance.idle= false;
@@ -116,9 +130,11 @@ var _getFreeInstance= function(fn){
 
 module.exports= {
 
-	load: function(url, fn){
+	load: function(o, fn){
 		var inst= _getFreeInstance(function(instance){
-
+			if(instance.page.open){
+				instance.page.open(o.url, fn);
+			}
 		});
 	},
 	getInstances: function(){
