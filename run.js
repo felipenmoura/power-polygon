@@ -97,7 +97,6 @@ function exiting(){
 
 // TODO: login
 // TODO: API services(list talks, etc)
-// TODO: start phantom watcher
 
 
 

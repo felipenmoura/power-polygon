@@ -700,7 +700,7 @@ window.PPW = (function ($, _d, console){
 
             if(!this.id)
                 this.id= "slide-"+i;
-
+            
             this.className+= ' ppw-internalSlide';
 
             o.slides.push({
@@ -787,10 +787,10 @@ window.PPW = (function ($, _d, console){
         if(_settings.shortcutsEnable && !_isInPrintableVersion()){
             _enableFuncKeys();
         }
-
+        
         _triggerEvent('onload', conf);
     };
-
+    
     var _setVerbosityLevel= function(level){
         /** 0/false: no messages
         *   1: errors
@@ -821,7 +821,7 @@ window.PPW = (function ($, _d, console){
                 window.console.error= function(){};
                 window.onerror= function(){return true;};
                 _addListener('onimagespreloaded', function(){
-
+                    
                     var list= _d.getElementsByTagName('iframe'),
                         l= list.length,
                         i= 0;
@@ -831,9 +831,9 @@ window.PPW = (function ($, _d, console){
                             list[i].contentWindow.onerror= function(){};
                         }
                     }catch(e){}
-
+                    
                     console.log("====DONE-LOADING====");
-
+                    
                     /*function myHandler(msg, url, line){};
                     function addErrorHandler(win, handler){
                         win.onerror = handler;
@@ -911,7 +911,7 @@ window.PPW = (function ($, _d, console){
                 else
                     _preloadSlides(function(){$('#ppw-lock-loading').fadeOut();});
             }
-
+            
             //if(_conf.isServerRequest)
         }
     };
@@ -1957,7 +1957,7 @@ window.PPW = (function ($, _d, console){
                         return _preventDefaultstopPropagation(evt);
                     }
                     break;*/
-
+                
                 case 71: // G
                     if(_settings.shortcutsEnable
                         && _conf.presentationStarted
@@ -1977,19 +1977,19 @@ window.PPW = (function ($, _d, console){
                         _pauseCamera();
                         return true;
                     }
-
+                    
                     _preventDefaultstopPropagation(evt);
                     if(_conf.currentZoom != 1){
                         _resetViewport();
                         return true;
                     }
-
+                    
                     if(_conf.inThumbsMode){
                         _goToSlide(_conf.currentSlide);
                         _closeToolbar();
                         return true;
                     }
-
+                    
                     if(_conf.showingToolBar){
                         _closeToolbar();
                     }else{
@@ -2006,7 +2006,7 @@ window.PPW = (function ($, _d, console){
                         return _preventDefaultstopPropagation(evt);
                     }
                     break;
-
+                
                 case 83: // S
                     if(_settings.shortcutsEnable
                         && _conf.presentationStarted
@@ -2016,7 +2016,7 @@ window.PPW = (function ($, _d, console){
                         return _preventDefaultstopPropagation(evt);
                     }
                     break;
-
+                
                 case 84: // T
                     if(_settings.shortcutsEnable
                         && _conf.presentationStarted
@@ -2274,15 +2274,15 @@ window.PPW = (function ($, _d, console){
 
             return _preventDefaultstopPropagation(evt);
         });*/
-
+                                                                                        
         var scheduleNoCursor= function(){
             _w.clearTimeout(noCursor);
-            noCursor= setTimeout(function(){
+            noCursor= setTimeout(function(){ 
                 cursorHidden= true;
                 $b.addClass('hidden-cursor');
             }, 2000);
         };
-
+        
         _b.addEventListener('mousemove', function(){
             if(cursorHidden){
                 cursorHidden= false;
@@ -2290,7 +2290,7 @@ window.PPW = (function ($, _d, console){
             }
             scheduleNoCursor();
         });
-
+                                                                                        
     };
 
     var _mouseWheelZoom= function(event){
@@ -2422,14 +2422,14 @@ window.PPW = (function ($, _d, console){
                         .replace(/\%num/gi, idx)
                             + (!_settings.slidesCache? ('?noCache='+(new Date()).getTime()) : '');
     }
-
+    
     var _loadSlide= function(slideId, i){
         var slide= _settings.slides[_getCurrentSlideFromURL(slideId)];
         $.ajax({
             url: _getSlideURL(slideId, i||0),
             success: (function(slide, i){
                         return function(data, status, xhr){
-
+                            
                                     var el= _d.getElementById(slide.id),
                                         tt= null;
 
@@ -2605,7 +2605,7 @@ window.PPW = (function ($, _d, console){
             if(tt.replace(/ /g, '').length === 0){
                 tt= i.id;
             }
-
+            
             msg+= "<li data-slide-id='"+i.index+"' class='ppw-goto-list-item'>";
             msg+= "<span class='ppw-slide-num'>"+ i.index +"</span><span class='ppw-slide-tt'>"+ (tt.substring(0, 28) || 'slide '+i.index)+"</span>";
             msg+= "</li>";
@@ -2895,14 +2895,14 @@ window.PPW = (function ($, _d, console){
                 var i=0, l=0, str= '', authors= [], cachedEl;
                 _d.body.innerHTML+= data;
                 _setLoadingBarStatus("splash screen");
-
+                    
                 $('#ppw-goFullScreen-trigger').click(_enterFullScreen);
                 $('#ppw-testResolution-trigger').click(_testResolution);
                 $('#ppw-testAudio-trigger').click(_testAudio);
                 $('#ppw-testCamera-trigger').click(PPW.toggleCamera);
                 $('#ppw-testConnection-trigger').click(_testConnection);
                 $('#ppw-talk-title').html(_settings.title);
-
+                
                 cachedEl= $('#ppw-talk-title-container');
                 if(_settings.authors){
                     for(i=0, l=_settings.authors.length; i<l; i++){
@@ -2917,9 +2917,9 @@ window.PPW = (function ($, _d, console){
                     }
                     cachedEl.find('author').html('by '+str);
                 }
-
+                
                 cachedEl.find('span').html(_settings.description);
-
+                
                 $('.ppw-menu-start-icon').click(_startPresentation);
                 $('.ppw-notification-close-button').click(_closeNotification);
 
@@ -3031,10 +3031,10 @@ window.PPW = (function ($, _d, console){
                                 //}
                             }
                         });
-
+                        
                         if(!_conf.isServerRequest)
                         _w.introJs().start();
-
+                        
                         $('.introjs-helperLayer').css('top', '+=20px');
                     }, 3000);
                 }
@@ -3310,7 +3310,7 @@ window.PPW = (function ($, _d, console){
         container.removeClass('ppw-showing')
                  .data('messageType', false)
                  .data('messageTitle', false);
-
+        
         _d.activeElement.blur();
     };
 
@@ -3415,7 +3415,7 @@ window.PPW = (function ($, _d, console){
 
                         dnd.pageX= event.pageX;
                         dnd.pageY= event.pageY;
-
+                        
                         dnd.offsetX= event.offsetX||event.originalEvent.layerX;
                         dnd.offsetY= event.offsetY||event.originalEvent.layerY;
                         dnd.height= el[0].offsetHeight;
@@ -3692,7 +3692,7 @@ window.PPW = (function ($, _d, console){
 
         _settings.presentationStarted= _conf.presentationStarted= (new Date()).getTime();
         _goToSlide(_getCurrentSlideFromURL());
-
+        
         if(el)
             el.blur();
 
@@ -3713,7 +3713,7 @@ window.PPW = (function ($, _d, console){
             evt.preventDefault();
             return false;
         }
-
+        
         if(_conf.isServerRequest){
             window.publicServerInformation= [];
             var coverSlide= false;
@@ -3732,10 +3732,10 @@ window.PPW = (function ($, _d, console){
                 if(cover)
                     coverSlide= i.id;
                 window.publicServerInformation.push(item);
-
+                
                 return i;
             });
-
+            
             window.publicServerInformation= {
                 title: _settings.title,
                 canonic: _settings.canonic,
@@ -3746,7 +3746,7 @@ window.PPW = (function ($, _d, console){
                 themes: _settings.theme,
                 slides: window.publicServerInformation
             };
-
+            
             console.log('====publicServerInformation====', JSON.stringify(window.publicServerInformation), '====publicServerInformation====');
         }
     };
@@ -4783,7 +4783,7 @@ window.PPW = (function ($, _d, console){
      * Creates the default icons on the toolbar
      */
     var _createDefaultIcons= function(){
-
+        
         _createIcon({
             id: 'ppw-toolbox-icon',
             description: "Open the Presentation Tool",
@@ -4808,14 +4808,14 @@ window.PPW = (function ($, _d, console){
             image: false, //_createPPWSrcPath('_images/remote-conection-status-no-server.png'),
             click: _enableRemote
         }, true).attr('rule', 'no-server');
-
+        
         _createIcon({
             id: 'ppw-help-icon',
             description: "See tips and useful links",
             image: _createPPWSrcPath('_images/help-icon.png'),
             click: _showHelp
         }, true);
-
+        
         _createIcon({
             id: 'ppw-settings-icon',
             description: "Shows the settings pannel",
@@ -4971,6 +4971,75 @@ window.PPW = (function ($, _d, console){
      // will be exposed by the API, becoming global   //
      // variables and functions on the PPW namespace  //
      /*************************************************/
-    /*#include return */
+    return {
+        version                         : _version,
+        init                            : _init,
+        setLoadingBarStatus             : _setLoadingBarStatus,
+        testConnection                  : _testConnection,
+        enterFullScreen                 : _enterFullScreen,
+        testResolution                  : _testResolution,
+        openPresentationTool            : _openPresentationTool,
+        goNextSlide                     : _goNextSlide,
+        goNext                          : _goNextSlide,
+        goPreviousSlide                 : _goPreviousSlide,
+        goPrevious                      : _goPreviousSlide,
+        goPrev                          : _goPreviousSlide,
+        testAudio                       : _testAudio,
+        extend                          : _extend,
+        startCamera                     : _startCamera,
+        stopCamera                      : _pauseCamera,
+        showMessage                     : _showMessage,
+        showWarning                     : _showWarning,
+        showWarn                        : _showWarning,
+        showError                       : _showError,
+        toggleCamera                    :  _toggleCamera,
+        addListener                     : _addListener,
+        removeListener                  : _removeListener,
+        triggerPresentationToolLoadEvent: _triggerPresentationToolLoadEvent,
+        showConfiguration               : _showConfiguration,
+        startPresentation               : _startPresentation,
+        addAction                       : _addAction,
+        cons                            : _conf.cons,
+        showGoToComponent               : _showGoToComponent,
+        showSearchBox                   : _showSearchBox,
+        showHelp                        : _showHelp,
+        animations                      : _conf.animations,
+        animate                         : _animate,
+        language                        : _conf.currentLang,
+        showThumbs                      : _showThumbs,
+        biggerFonts                     : _biggerFonts,
+        smallerFonts                    : _smallerFonts,
+        print                           : _print,
+        onSlideEnter                    : _onSlideEnter,
+        onSlideExit                     : _onSlideExit,
+        onSlideUndo                     : _onSlideUndo,
+        onSlideDoes                     : _onSlideDoes,
+        viewport                        : _viewport,
+        rotate                          : _rotate,
+        goToSlide                       : _goToSlide,
+        enableRemote                    : _enableRemote,
+        remote                          : {},
+        //triggerEvent                   : _triggerEvent,
+        // API GETTERS/SETTERS METHODS
+        getSlides                       : _getSlides,
+        getValidSlides                  : _getValidSlides,
+        getCurrentSlide                 : _getCurrentSlide,
+        getAlertAtTimes                 : _getAlertAtTimes,
+        getStartedAt                    : _getStartedAt,
+        getNextSlide                    : _getNextValidSlide,
+        getPrevSlide                    : _getPrevValidSlide,
+        setProfile                      : _setPresentationProfile,
+        lock                            : _lock,
+        unlock                          : _unlock,
+        setCurrentPath                  : _setCurrentPath,
+        isLocked                        : function(){return _conf.locked;},
+        get                             : _get,
+        set                             : _set,
+        Facebook                        : true,
+        Google                          : true,
+        pushState                       : _pushState,
+        getPPWPath                      : _getPPWPath,
+        createIcon                      : _createIcon
+    };
 
 })(window.jQuery, document, window.console);

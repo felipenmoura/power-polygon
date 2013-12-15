@@ -28,6 +28,7 @@
     "socket.io": "~0.9.13",
     "grunt": "*",
     "grunt-contrib-uglify": "*",
+    "grunt-contrib-watch": "~0.5.3",
     "phantomjs": "~1.9.2",
     "gm": "~1.13.3",
     "node-phantom": "~0.2.5",
