@@ -6,6 +6,7 @@
 *.swp
 .project
 .DS_Store
+*/.DS_Store
 ./nbproject
 .buildpath
 .project

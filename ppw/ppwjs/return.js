@@ -1,4 +1,3 @@
-
 return {
         version                         : _version,
         init                            : _init,
